@@ -1,0 +1,19 @@
+name = pfizer
+description = Base-Theme for pfizer WebSites
+package = Core
+version = 7.x-1.0.1
+core = 7.x
+
+
+stylesheets[all][] = styles/reset.css
+stylesheets[all][] = styles/base.css
+
+regions[navigation] = Navigation
+regions[header] = Header
+regions[left_sidebar] = Left sidebar
+regions[content] = Content
+regions[content_bottom] = Content Bottom
+regions[right_sidebar] = Right sidebar
+regions[footer] = Footer
+regions[highlighted] = Highlighted
+regions[help] = Help

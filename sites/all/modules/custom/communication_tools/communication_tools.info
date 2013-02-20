@@ -1,0 +1,11 @@
+name = Communication Tools
+description = Shows an overlay window that will allow the user to refer a page to a friend and will also enable and disable the facebook fan page
+package = pfizer
+core = 7.x
+version = "7.x-1.10"
+scripts[] = scripts/communication_tools.js
+scripts[] = scripts/jquery.printElement.min.js
+dependencies[] = addthis
+dependencies[] = captcha
+files[] = communication_tools.test
+

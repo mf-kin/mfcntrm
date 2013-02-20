@@ -1,0 +1,53 @@
+testimonial CHANGELOG
+-----------------
+7.x-3.0 Thu, May 01, 2012
+  [ENHANCEMENTS]
+   - merging 7.x-2.7, 7.x-2.8
+   - PES-364: suppress emails when there are no testimonials
+
+7.x-2.7 Thu, May 01, 2012
+  [ENHANCEMENTS]
+   - testimonial.module:
+      * Suppress emails when there are no new testimonials
+
+7.x-2.7 Thu, Apr 04, 2012
+  [ENHANCEMENTS]
+   - testimonial.submission.inc:  
+      * Render only form in a page if 'use overlay' is enabled
+   - testimonial.admin.settings.inc : 
+      * Add variable to make possible use share your story in an iframe overlay
+      * Add variable to set preloader image path
+      * Add const to define a default preloader path
+      * Add a default preloader image
+   - testimonial.module: 
+      * Add hook_init to add preloader image path on Drupal.settings variable
+      * Add delivery callback to verify if it is overlay or page
+   
+7.x-2.6  Mar 20, 2012
+  [ENHANCEMENTS]
+   - testimonial.admin.settings.inc: textfield from GSSE E-mail address changed to textarea to receive more than 128 characters
+
+7.x-2.5  Feb 16, 2012
+  [ENHANCEMENTS] 
+  * Textareas changed to "text_format" to add CKEditor feature to manipulate html elements with css.
+  * Adding a condition to line 304 to prevent errors trying get values from no existent object, probably created from empty creation of testimonial's content
+
+7.x-2.4 Thu, Feb 16, 2012
+  [ENHANCEMENTS]
+  * Implement the hook_theme for the testimonial preview page.
+
+7.x-2.3 Fri, Jan 27, 2012
+  [ENHANCEMENTS] 
+  * Change the order of the fields in the form API to display the errors messagens in the same order as the fields
+    - testimonial.submission.inc: change the position of the email confirmation field to be bellow of the product field
+
+7.x-2.2 Fri, Jan 27, 2012
+  [ENHANCEMENTS] 
+  * added admin form configuration for e-mail confirmation error message
+    - testimonial.admin.settings.inc: added field and fieldset to the admin form
+    - testimonial.install: added variable to the module's installation
+    - testimonial.submission.inc: used created variable in the validation routine
+
+7.x-2.1 Wed, Nov 30, 2011
+  [ENHANCEMENTS] 
+  * evolved testimonial module to include configuration for a different title for form step2 and for the thank-you page.

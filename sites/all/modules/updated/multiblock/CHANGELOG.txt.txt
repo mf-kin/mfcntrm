@@ -1,0 +1,6 @@
+Multiblock CHANGELOG
+-----------------
+7.x-1.1-dev Mon, Jan 9, 2012
+   [BUGFIX]
+  * fix a bug with multiblock, reported to the author of the module
+  

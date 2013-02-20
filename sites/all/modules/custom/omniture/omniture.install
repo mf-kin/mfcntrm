@@ -1,0 +1,184 @@
+<?php
+/**
+ * @file
+ * Install file for Omniture module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */ 
+function omniture_install() {
+  _omniture_set_default_variable_values();
+  _omniture_update_module_weight();
+}
+
+/**
+ * Read configuration files from the module and set default configuration value for omniture variables.
+ */
+function _omniture_set_default_variable_values() {
+  $omniture_module_path = drupal_get_path('module', 'omniture');
+
+  $config_section = '';
+  $config_section .= file_get_contents($omniture_module_path . '/scripts/defaults/s_code_default_config.js', 'r');
+  
+  $default_js = '';
+  $default_js .= file_get_contents($omniture_module_path . '/scripts/defaults/s_code_default_tracking_code.js', 'r');;
+  
+  $plugins_section = '';
+  $plugins_section .= file_get_contents($omniture_module_path . '/scripts/defaults/s_code_default_plugins.js', 'r');
+  
+  $s_code_core = '';
+  $s_code_core .= file_get_contents($omniture_module_path . '/scripts/defaults/s_code_core.js', 'r');
+  
+  variable_set('omniture_config_section', $config_section);
+  variable_set('omniture_default_js', $default_js);
+  variable_set('omniture_plugins_section', $plugins_section);
+  variable_set('omniture_modules_section', '');
+  variable_set('omniture_s_code_core', $s_code_core);
+}
+
+/**
+ * Make sure weight of omniture module is heavy, so it can be one of the latest to run.
+ */
+function _omniture_update_module_weight() {
+  db_update('system')
+    ->fields(array('weight' => 1000))
+    ->condition('name', 'omniture', '=')
+    ->execute();
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */ 
+function omniture_uninstall() {
+  db_delete('variable')->condition('name', 'omniture_%', 'LIKE')->execute();
+}
+
+/**
+ * Implements hook_schema().
+ */
+function omniture_schema() {
+
+  $schema['omniture'] = array(
+    'description' => 'Omniture pages specific configuration.',
+    'fields' => array(
+      'oid' => array(
+        'description' => 'The primary identifier for an entry.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'value' => array(
+        'description' => 'Page URL or content type machine name.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'type' => array(
+        'description' => 'Whether it is an url or a content type.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => 'url',
+      ),
+      'source' => array(
+        'description' => 'Javascript source to be added.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+    ),
+    'unique keys' => array(
+      'value' => array(
+        'value',
+        'type',
+      ),
+    ),
+    'indexes' => array(
+      'oid' => array('oid'),
+      'type' => array('type'),
+    ),
+    'primary key' => array('oid'),
+  );
+  
+  $schema['omniture_selectors'] = array(
+    'description' => 'Omniture code generator for specific selectors configuration.',
+    'fields' => array(
+      'osid' => array(
+        'description' => 'The primary identifier for an entry.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Selector name for better identification.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'selector' => array(
+        'description' => 'jQuery selector to apply code.',
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'event' => array(
+        'description' => 'jQuery event to which selector will be bound to.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'code_snippet' => array(
+        'description' => 'Code snippet to for definition of variables before tracking.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'variables' => array(
+        'description' => 'Which omniture variables should be tracked when event is triggered.',
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'variables_values' => array(
+        'description' => 'Values of each variable.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'events' => array(
+        'description' => 'Events to be passed when event is triggered.',
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'is_behavior' => array(
+        'description' => 'Whether it should create a behavior or place the code inside document.ready().',
+        'type' => 'int',
+        'size' => 'tiny',
+      ),
+      'active' => array(
+        'description' => 'Whether this rule is active.',
+        'type' => 'int',
+        'size' => 'tiny',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'default' => 0,
+        'description' => 'Position displayed in table',  
+      ),
+    ),
+    'indexes' => array(
+      'osid' => array('osid'),
+    ),
+    'primary key' => array('osid'),
+  );
+  
+  return $schema;
+}

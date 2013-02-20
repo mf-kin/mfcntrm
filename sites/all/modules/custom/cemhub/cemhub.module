@@ -1,0 +1,275 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Enables the CEM HUB registration and cronjob system.
+ */
+
+define('CEMHUB_FIELD_DOB_MONTH', 'field_dob_month');
+define('CEMHUB_FIELD_DOB_YEAR', 'field_dob_year');
+define('CEMHUB_FIELD_STATE', 'field_state');
+define('CEMHUB_EXTENSION_GNUPG_NAME', 'gnupg');
+define('CEMHUB_EXTENSION_SSH_NAME', 'ssh2');
+define('CEMHUB_BASE_TEMPLATE', 'webform_form_cemhub_base');
+define('CEMHUB_DEFAULT_LIMIT_SUBMISSION', 9999);
+
+/**
+ * Implements hook_init()
+ */
+function cemhub_init() {
+  module_load_include('inc', 'cemhub', 'cemhub.common');
+}
+
+/**
+ * Implements hook_menu()
+ */
+function cemhub_menu() {
+  $items['admin/config/cemhub/registration'] = array(
+    'title' => 'Vendor Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/config/cemhub'] = array(
+    'title' => 'Pfizer CEM HUB',
+    'description' => 'Vendor Registration Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cemhub_vendor_registration'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'cemhub.admin.inc',
+    'weight' => 0,
+  );
+
+  $items['admin/config/cemhub/integration-settings'] = array(
+    'title' => 'Integration Settings',
+    'description' => 'Manage Integration Settings options to CEM HUB',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cemhub_integration_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'cemhub.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+
+  $items['admin/config/cemhub/forms-settings'] = array(
+    'title' => 'Forms Settings',
+    'description' => 'Define which webforms will be integrated with CEM HUB',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cemhub_forms_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'cemhub.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
+
+  $items['admin/config/cemhub/fields'] = array(
+    'title' => 'Map Webform Fields',
+    'description' => 'Define Q&A of the fields that will be sent to CEMHUB.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cemhub_mapping_fields'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'cemhub.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+
+  $items['admin/config/cemhub/default-template-content'] = array(
+    'title' => 'Default template content',
+    'description' => 'Define the title, subtitle and description for rendering the sign up page, ' .
+                     'when using the default template provided by the module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cemhub_default_template_content_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'cemhub.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 4,
+  );
+
+  $items['admin/config/cemhub/batchrun'] = array(
+    'title' => 'Run Job Manually',
+    'description' => 'Force to Run job for Cem Hub',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cemhub_run_manually'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'cemhub.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 6,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function cemhub_cron() {
+  module_load_include('inc', 'cemhub', 'cemhub.common');
+
+  if (cemhub_is_integration_enabled()) {
+    if (cemhub_cron_should_perform_job() && cemhub_check_required_environment_settings(FALSE, TRUE)) {
+      variable_set('cemhub_last_cron_run', date('Ymd'));
+      
+      module_load_include('inc', 'cemhub', 'cemhub.submission');
+      cemhub_process_submissions();
+    }
+  }
+  else {
+    watchdog('cemhub', 'The file was not generated because the variable "Integration enabled" is unset. The data are still at the database for future integration layer.');
+  }
+}
+
+/**
+ * Implements hook_form_alter()
+ */
+function cemhub_form_alter(&$form, &$form_state, $form_id) {
+  module_load_include('inc', 'cemhub', 'cemhub.common');
+  $webforms = cemhub_get_integrated_webforms_settings();
+
+  if (!empty($webforms)) {
+    foreach ($webforms as $webform) {
+      $nid           = $webform->nid;
+      $template_name = $webform->template_name;
+
+      if ($form_id == 'webform_client_form_' . $nid) {
+        // Define Theme based in CMS value
+        if (!empty($template_name)){
+          $form['#theme'] = array($template_name);
+        }
+
+        // Field DOB YEAR
+        if (isset($form['submitted'][CEMHUB_FIELD_DOB_YEAR])) {
+          $years = cemhub_get_dob_years();
+          $form['submitted'][CEMHUB_FIELD_DOB_YEAR]['#options'] = $years;
+        }
+
+        // Field DOB MONTH
+        if (isset($form['submitted'][CEMHUB_FIELD_DOB_MONTH])) {
+          $form['submitted'][CEMHUB_FIELD_DOB_MONTH]['#options'] = array('' => t('MM')) + $form['submitted'][CEMHUB_FIELD_DOB_MONTH]['#options'];
+        }
+
+        // Field STATE
+        if(isset($form['submitted'][CEMHUB_FIELD_STATE])) {
+          //Add a default option for State select.
+          $form['submitted'][CEMHUB_FIELD_STATE]['#options'] = array('' => t('Select')) + $form['submitted'][CEMHUB_FIELD_STATE]['#options'];
+        }
+
+        // Validating the age
+        if (!empty($webform->age_validation)) {
+          $form['#validate'][] = 'cemhub_age_validator_sign_up';
+        }
+
+        $form['submitted']['field_email']['#maxlength'] = 60;
+      }
+    }
+  }
+}
+
+/**
+ * Form validation for the CEM HUB registration.
+ */
+function cemhub_age_validator_sign_up($form, &$form_state) {
+  if (empty($form_state['values']['submitted'][CEMHUB_FIELD_DOB_MONTH]) ||
+      empty($form_state['values']['submitted'][CEMHUB_FIELD_DOB_YEAR])) {
+    return FALSE;
+  }
+
+  $month_of_birth = intval($form_state['values']['submitted'][CEMHUB_FIELD_DOB_MONTH]);
+  $year_of_birth  = intval($form_state['values']['submitted'][CEMHUB_FIELD_DOB_YEAR]);
+
+  // It also treats if the income is letters, so intval brings zero.
+  $is_valid_month = ($month_of_birth >= 1 && $month_of_birth <=12);
+  $is_valid_year =  ($year_of_birth >= date('Y')-100 && $year_of_birth <= date('Y'));
+
+  if (!$is_valid_month) {
+    form_set_error(CEMHUB_FIELD_DOB_MONTH, t('The month field must contain a 2 digits value.'));
+  }
+  elseif (!$is_valid_year) {
+    form_set_error(CEMHUB_FIELD_DOB_YEAR, t('This year is not on range.'));
+  }
+  else {
+    $datetime_dob = new DateTime("{$year_of_birth}-{$month_of_birth}-01");
+    $datetime_now = new DateTime('now');
+    $years_difference = $datetime_dob->diff($datetime_now)->format('%R%y');
+
+    // The returned value $interval->format('%R%y') is a string with the range (+) ou (-) and the difference in years
+    // Check if the (+) sign is on the string, just to avoid some injection
+    $is_valid_date_interval = preg_match('/^\+[0-9]+$/', $years_difference);
+
+    $is_valid_date_of_birth = FALSE;
+    if ($is_valid_date_interval) {
+      $is_valid_date_of_birth = (int)$years_difference >= 18;
+    }
+
+    if (!$is_valid_date_of_birth) {
+      form_set_error(CEMHUB_FIELD_DOB_YEAR, t('You must be over 18 to subscribe.'));
+    }
+  }
+}
+
+/**
+ * Implements hook_theme()
+ */
+function cemhub_theme() {
+  $templates = array();
+
+  $templates[CEMHUB_BASE_TEMPLATE] = array(
+    'render element' => 'form',
+    'template'       => CEMHUB_BASE_TEMPLATE,
+    'path'           => drupal_get_path('module', 'cemhub'),
+  );
+
+  module_load_include('inc', 'cemhub', 'cemhub.common');
+  $webforms = cemhub_get_integrated_webforms_settings();
+  
+  if (!empty($webforms)) {
+    foreach ($webforms as $webform) {
+      $template_name = $webform->template_name;
+      if (!empty($template_name) && $template_name != CEMHUB_BASE_TEMPLATE){
+        $templates[$template_name] = array(
+          'render element' => 'form',
+          'template'       => $template_name,
+        );
+      }
+    }
+  }
+
+  return $templates;
+}
+
+/**
+ * Implements hook_node_delete()
+ */
+function cemhub_node_delete($node) {
+  $is_webform = $node->type == 'webform';
+  if ($is_webform) {
+    module_load_include('inc', 'cemhub', 'cemhub.admin');
+    cemhub_cleanup_webform_references($node->nid);
+  }
+}
+
+/**
+ * Implements hook_cemhub_data_alter()
+ */
+function cemhub_cemhub_data_alter(&$data, $webform_nid) {
+  $field_dob_exist = isset($data[CEMHUB_FIELD_DOB_MONTH]) && isset($data[CEMHUB_FIELD_DOB_YEAR]['data']);
+  
+  if ($field_dob_exist) {
+    module_load_include('inc', 'cemhub', 'cemhub.common');
+    $webform_settings = cemhub_get_integrated_webforms_settings(FALSE, $webform_nid);
+    if (!empty($webform_settings->group_date_fields)) {
+      $answer_map = list_extract_allowed_values($data[CEMHUB_FIELD_DOB_MONTH]['answer_code'], 'list_text', FALSE);
+      $answer_code = current($answer_map);
+
+      $data['field_dob'] = array(
+        'data' => '',
+        'question_code' => $data[CEMHUB_FIELD_DOB_MONTH]['question_code'],
+        'answer_code' => $answer_code
+      );
+
+      $data['field_dob']['data'] = $data[CEMHUB_FIELD_DOB_YEAR]['data'] . $data[CEMHUB_FIELD_DOB_MONTH]['data'] . '01';
+
+      unset($data[CEMHUB_FIELD_DOB_YEAR]);
+      unset($data[CEMHUB_FIELD_DOB_MONTH]);
+    }
+  }
+}

@@ -1,0 +1,52 @@
+<?php
+/**
+ * @file
+ * Enables actions to be fired on new system events
+ */
+
+require_once 'specialtriggers.actions.inc';
+
+/**
+ * Implements hook_trigger_info().
+ */
+function specialtriggers_trigger_info() {
+  return array(
+    'node' => array(
+      'unpublished_node' => array(
+        'label' => t('When unpublished node is loaded by an without permission user'),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_node_load().
+ */
+function specialtriggers_node_load($nodes, $types) {
+  foreach ($nodes as $node) {
+    if((!$node->status) && (!node_access('view', $node))) {
+      _trigger_node($node, 'unpublished_node');
+    }
+  }
+}
+
+/**
+ * Implements of hook_action_info().
+ */
+function specialtriggers_action_info() {
+  return array(
+    'specialtriggers_return_404_action' => array(
+      'type'         => 'system',
+      'label'        => t('Return 404 Not Found page'),
+      'configurable' => FALSE,
+      'triggers'     => array('node_view', 'node_insert', 'node_update', 'node_delete', 'unpublished_node'),
+    ),
+    'specialtriggers_return_403_action' => array(
+      'type'         => 'system',
+      'label'        => t('Return 403 Forbidden page'),
+      'configurable' => FALSE,
+      'triggers'     => array('node_view', 'node_insert', 'node_update', 'node_delete', 'unpublished_node'),
+    ),
+  );
+}
+

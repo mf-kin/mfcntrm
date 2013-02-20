@@ -1,0 +1,173 @@
+<?php
+/**
+ * @file
+ * This module track all pages on Omniture dynamically.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function omniture_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#omniture':
+      return t('Settings for Omniture module');
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function omniture_permission() {
+  return array(
+    'administer omniture configuration' => array(
+      'title' => t('Omniture configuration'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function omniture_menu() {
+  $items = array();
+  
+  $items['admin/config/omniture'] = array(
+    'title' => 'Omniture',
+    'description' => 'Adjust omniture options.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('omniture_admin_settings'),
+    'access arguments' => array('administer omniture configuration'),
+    'file' => 'inc/omniture.admin.inc',
+  );
+  
+  $items['admin/config/omniture/settings'] = array(
+    'title' => 'General settings',
+    'description' => 'Adjust omniture url settings.',
+    'weight' => -5,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/config/omniture/javascript-settings'] = array(
+    'title' => 'Javascript',
+    'description' => 'Adjust omniture javascript configuration.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('omniture_js_admin_settings'),
+    'access arguments' => array('administer omniture configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/omniture.admin.inc',
+    'weight' => 5,
+  );
+  
+  $items['admin/config/omniture/specific-page-settings'] = array(
+    'title' => 'By Page',
+    'description' => 'Adjust omniture tracking by specific page.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('omniture_url_admin_settings'),
+    'access arguments' => array('administer omniture configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/omniture.admin.inc',
+    'weight' => 10,
+  );
+  
+  $items['admin/config/omniture/content-type-settings'] = array(
+    'title' => 'By Content Type',
+    'description' => 'Adjust omniture content type settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('omniture_content_type_admin_settings'),
+    'access arguments' => array('administer omniture configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/omniture.admin.inc',
+    'weight' => 15,
+  );
+  
+  $items['admin/config/omniture/general-selectors-settings'] = array(
+    'title' => 'By Selectors',
+    'description' => 'Adjust omniture general selectors settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('omniture_general_selectors_admin_settings'),
+    'access arguments' => array('administer omniture configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/omniture.selectors_admin.inc',
+    'weight' => 20,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function omniture_theme() {
+  $module_path = drupal_get_path('module', 'omniture');
+
+  return array(
+    'omniture_selectors_admin_form_header'  => array(
+      'path'  => $module_path . '/theme/',
+      'template' => 'omniture_selectors_admin_form_header',
+    ),
+  );
+}
+
+/**
+ * Check wether omniture should be included.
+ */
+function _omniture_check_permissions() {
+  $s_account = variable_get('omniture_s_account', '');
+  // do not track anything if tracking account is not set
+  if (empty($s_account)) {
+    return;
+  }
+  
+  global $user;
+  // Check if we should track the currently active user's role.
+  $track = 0;
+  if (is_array($user->roles)) {
+    foreach ($user->roles as $role) {
+      $role = str_replace(' ', '_', $role);
+      $track += variable_get("omniture_{$role}", FALSE);
+    }
+  }
+  
+  return (arg(0) != 'admin' && $track > 0 && $user->uid != 1);
+}
+
+/**
+ * Implementation of hook_page_alter().
+ */
+function omniture_page_alter(&$variables) {
+  if (_omniture_check_permissions()) {
+    module_load_include('inc', 'omniture', 'inc/omniture.common');
+    _omniture_define_multiple_values(_omniture_get_request_variables());
+    _omniture_include_current_page_js();
+  }
+}
+
+/**
+ * Centralize omniture variables definition during request to be included in each page.
+ *
+ * @param string $name
+ *  The property.
+ * @param string $value
+ *  The value for the property.
+ */
+function omniture_set_variable($name = NULL, $value = NULL) {
+  $variables = &drupal_static(__FUNCTION__, array());
+
+  if (empty($name)) {
+    return $variables;
+  }
+  else if (empty($value) && isset($variables[$name])) {
+    return $variables[$name];
+  }
+  else {
+    $variables[$name] = $value;
+  }
+}
+
+function omniture_get_variables() {
+  return omniture_set_variable();
+}
+
+function omniture_get_variable($name) {
+  return omniture_set_variable($name);
+}

@@ -1,0 +1,7 @@
+name = Mobile Offers
+description = Generates a form where the user can input his email and receive an email with a link to an external website.
+package = pfizer
+core = 7.x
+version = 7.x.0.4
+
+stylesheets[screen][] = styles/mobile_offers.css

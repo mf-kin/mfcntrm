@@ -1,0 +1,14 @@
+mobile_offers CHANGELOG
+-----------------
+7.x.0.1 Fri, Mar 09, 2012
+  [CREATION]
+  * Module Creation
+
+7.x-0.4 Wed, May 30, 2012
+ [ENHANCEMENTS]
+  *inc/mobile_offers.forms.inc, inc/mobile_offers.admin.inc:
+    -Add Nodequeue Product Select
+ [BUGFIX]
+  *inc/mobile_offers.common.inc
+    -Fixed validation email address
+	-Fixed a bug which shows not published nodes in the dropdown of the front form

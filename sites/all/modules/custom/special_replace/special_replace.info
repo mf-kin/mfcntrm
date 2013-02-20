@@ -1,0 +1,5 @@
+name = Special Replace
+description = Replace any text pattern INSIDE the body tag of the HTML
+package = pfizer
+core = 7.x
+version = "7.x-0.1"

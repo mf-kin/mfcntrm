@@ -1,0 +1,395 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for the couponsinc module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function couponsinc_install() {
+  module_load_include('inc', 'couponsinc', 'inc/couponsinc.utils');
+  
+  // Create content type
+  node_types_rebuild();
+  couponsinc_add_content_type_fields();
+  couponsinc_create_custom_filter_type();
+  
+  // Disables the cache for the text formats
+  couponsinc_disable_text_formats_cache();
+}
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function couponsinc_uninstall() {
+  drupal_load('module', 'couponsinc');
+
+  couponsinc_delete_variables();
+  couponsinc_delete_nodes();
+  couponsinc_delete_content_type_fields();
+  couponsinc_delete_content_type();
+  couponsinc_delete_custom_filter_rules();
+  couponsinc_delete_custom_filter_type();
+}
+
+/**
+ * Delete all module variables
+ */
+function couponsinc_delete_variables() {
+  watchdog('couponsinc', 'Deleting module variables.');
+
+  db_delete('variable')->condition('name', 'couponsinc_%', 'LIKE')->execute();
+}
+
+/**
+ * Delete all nodes of Coupons content type
+ */
+function couponsinc_delete_nodes() {
+  watchdog('couponsinc', 'Deleting nodes.');
+
+  $query = <<<QUERY
+    SELECT n.nid
+    FROM {node} n
+    WHERE n.type = :type
+QUERY;
+
+  $args = array(
+    ':type' => 'couponsinc_coupons_type',
+  );
+  $nodes = db_query($query, $args);
+
+  $nids_to_delete = array();
+  foreach($nodes as $node) {
+    $nids_to_delete[] = $node->nid;
+  }
+
+  if (!empty($nids_to_delete)) {
+    node_delete_multiple($nids_to_delete);
+  }
+}
+
+/**
+ * Delete fields of Coupons content type
+ */
+function couponsinc_delete_content_type_fields() {
+  watchdog('couponsinc', 'Deleting fields of Coupons content type.');
+
+  $fields = couponsinc_get_content_type_fields_definition();
+
+  foreach ($fields as $field) {
+    field_delete_instance($field);
+    field_delete_field($field['field_name']);
+  }
+}
+
+/**
+ * Delete Coupon content type
+ */
+function couponsinc_delete_content_type() {
+  watchdog('couponsinc', 'Deleting Coupon content type');
+
+  node_type_delete('couponsinc_coupons_type');
+}
+
+/**
+ * Delete custom filter rules
+ */
+function couponsinc_delete_custom_filter_rules() {
+  $fid = db_query('SELECT fid FROM {customfilter_filter} WHERE type = :type', array(':type' => COUPONS_INC_CUSTOM_FILTER_TYPE))->fetchField();
+  db_delete('customfilter_rule')
+  ->condition('fid', $fid)
+  ->execute();
+}
+
+/**
+ * Delete coupons custom filter type
+ */
+function couponsinc_delete_custom_filter_type() {
+  db_delete('customfilter_filter')
+  ->condition('type', COUPONS_INC_CUSTOM_FILTER_TYPE)
+  ->execute();
+}
+
+/**
+ * Add content type fields
+ */
+function couponsinc_add_content_type_fields() {
+  $fields = couponsinc_get_content_type_fields_definition();
+
+  foreach ($fields as $field) {
+    field_create_field($field);
+    field_create_instance($field);
+  }
+}
+
+/**
+ * Return content type fields definitions
+ */
+function couponsinc_get_content_type_fields_definition() {
+  $weight = 0;
+
+  $fields = array(
+    array(
+      'field_name' => 'field_couponsinc_offer_code',
+      'active' => '1',
+      'cardinality' => '1',
+      'entity_types' => array(),
+      'foreign keys' => array(
+        'format' => array(
+          'columns' => array(
+            'format' => 'format',
+          ),
+          'table' => 'filter_format',
+        ),
+      ),
+      'indexes' => array(
+        'format' => array(
+          0 => 'format',
+        ),
+      ),
+      'module' => 'text',
+      'translatable' => TRUE,
+      'type' => 'text',
+      'bundle' => 'couponsinc_coupons_type',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => t('Numeric value specific for that coupon, as provided by Coupons, Inc.'),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'text',
+          'settings' => array(),
+          'type' => 'text_default',
+          'weight' => 3,
+        ),
+        'teaser' => array(
+          'label' => 'above',
+          'settings' => array(),
+          'type' => 'hidden',
+          'weight' => 0,
+        ),
+      ),
+      'entity_type' => 'node',
+      'label' => t('Offer Code'),
+      'required' => TRUE,
+      'settings' => array(
+        'max_length' => '10',
+        'text_processing' => '0',
+        'user_register_form' => FALSE,
+      ),
+      'widget' => array(
+        'active' => TRUE,
+        'module' => 'text',
+        'settings' => array(
+          'size' => '10',
+        ),
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+    ),
+    array(
+      'field_name' => 'field_couponsinc_check_code',
+      'active' => '1',
+      'cardinality' => '1',
+      'entity_types' => array(),
+      'foreign keys' => array(
+        'format' => array(
+          'columns' => array(
+            'format' => 'format',
+          ),
+          'table' => 'filter_format',
+        ),
+      ),
+      'indexes' => array(
+        'format' => array(
+          0 => 'format',
+        ),
+      ),
+      'module' => 'text',
+      'translatable' => TRUE,
+      'type' => 'text',
+      'bundle' => 'couponsinc_coupons_type',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => t('2-character value specific for that coupon, as provided by Coupons, Inc.'),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'text',
+          'settings' => array(),
+          'type' => 'text_default',
+          'weight' => 3,
+        ),
+        'teaser' => array(
+          'label' => 'above',
+          'settings' => array(),
+          'type' => 'hidden',
+          'weight' => 0,
+        ),
+      ),
+      'entity_type' => 'node',
+      'label' => t('Check Code'),
+      'required' => TRUE,
+      'settings' => array(
+        'max_length' => '2',
+        'text_processing' => '0',
+        'user_register_form' => FALSE,
+      ),
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => '5',
+        ),
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+    ),
+    array(
+      'field_name' => 'field_couponsinc_short_key',
+      'active' => '1',
+      'cardinality' => '1',
+      'entity_types' => array(),
+      'foreign keys' => array(
+        'format' => array(
+          'columns' => array(
+            'format' => 'format',
+          ),
+          'table' => 'filter_format',
+        ),
+      ),
+      'indexes' => array(
+        'format' => array(
+          0 => 'format',
+        ),
+      ),
+      'module' => 'text',
+      'translatable' => TRUE,
+      'type' => 'text',
+      'bundle' => 'couponsinc_coupons_type',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => t('10-character alphanumeric value specific for the coupon, as provided by Coupons, Inc.'),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'text',
+          'settings' => array(),
+          'type' => 'text_default',
+          'weight' => 3,
+        ),
+        'teaser' => array(
+          'label' => 'above',
+          'settings' => array(),
+          'type' => 'hidden',
+          'weight' => 0,
+        ),
+      ),
+      'entity_type' => 'node',
+      'label' => t('Short CipherKey'),
+      'required' => TRUE,
+      'settings' => array(
+        'max_length' => '10',
+        'text_processing' => '0',
+        'user_register_form' => FALSE,
+      ),
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => '10',
+        ),
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+    ),
+    array(
+      'field_name' => 'field_couponsinc_long_key',
+      'active' => '1',
+      'cardinality' => '1',
+      'entity_types' => array(),
+      'foreign keys' => array(
+        'format' => array(
+          'columns' => array(
+            'format' => 'format',
+          ),
+          'table' => 'filter_format',
+        ),
+      ),
+      'indexes' => array(
+        'format' => array(
+          0 => 'format',
+        ),
+      ),
+      'module' => 'text',
+      'translatable' => TRUE,
+      'type' => 'text',
+      'bundle' => 'couponsinc_coupons_type',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => t('61-character alphanumeric value specific for the coupon, as provided by Coupons, Inc.'),
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'text',
+          'settings' => array(),
+          'type' => 'text_default',
+          'weight' => 3,
+        ),
+        'teaser' => array(
+          'label' => 'above',
+          'settings' => array(),
+          'type' => 'hidden',
+          'weight' => 0,
+        ),
+      ),
+      'entity_type' => 'node',
+      'label' => t('Long CipherKey'),
+      'required' => TRUE,
+      'settings' => array(
+        'max_length' => '61',
+        'text_processing' => '0',
+        'user_register_form' => FALSE,
+      ),
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => '61',
+        ),
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+    ),
+    array(
+      'field_name' => 'field_offer_image',
+      'type' => 'image',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'couponsinc_coupons_type',
+      'label' => t('Offer Image'),
+      'widget' => array(
+        'type' => 'image_image',
+        'weight' => $weight++,
+      ),
+      'description' => t('The image of the coupon itself (which will be printed by the customer).'),
+      'settings' => array(
+        'alt_field' => TRUE,
+        'file_directory' => 'offers',
+        'file-extensions' => 'png, gif, jpg, jpeg',
+        'max_filesize' => '500KB',
+        'max_resolution' => '428x315',
+        'min_resolution' => '428x315',
+        'preview_image_style' => 'thumbnail',
+        'title_field' => TRUE,
+      )
+
+    )
+  );
+
+  return $fields;
+}

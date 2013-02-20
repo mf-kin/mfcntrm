@@ -1,0 +1,81 @@
+div#gmapslivesearch-wrapper {
+  position: relative;
+}
+
+div#gmapslivesearch-loader  {
+  background: transparent url(../images/ajax-loader.gif) no-repeat top left ;
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -16px 0 0 -16px;
+}
+
+div#gmapslivesearch-map {
+  float:right;
+  width: 600px;
+  height: 440px;
+}
+
+div#gmapslivesearch-stores {
+  float:left;
+  width: 300px;
+  height:280px;
+}
+
+div#searcher { display:none;}
+
+a.gmapslivesearch-printresults{
+  clear:both;
+  display: block;
+}
+
+
+.jspContainer {
+	overflow: hidden;
+	position: relative;
+}
+
+.jspPane { 	
+	position: absolute;
+}
+
+.jspVerticalBar {
+	position: absolute;
+	top: 0;
+	right: 5px;
+	width: 11px;
+	height: 100%;
+}
+
+.jspTrack {
+    background: transparent url(../images/track.png) no-repeat top left ;
+	position: relative;
+}
+
+.jspDrag {
+  background: transparent url(../images/drag.png) no-repeat top left ;
+  position: relative;
+  top: 0;
+  left: 1px;
+  cursor: pointer;
+  height: 73px !important;
+}
+
+.jspHorizontalBar .jspTrack,
+.jspHorizontalBar .jspDrag {
+	float: left;
+	height: 100%;
+}
+
+div#gmapslivesearch-stores a.share { 
+  font-size: 0;
+  width: 16px;
+  height: 16px;
+  color: transparent;
+  display: inline-block;
+  background: url(../images/mail.png) no-repeat;
+  line-height: 27px;
+  margin-left: 3px;
+}

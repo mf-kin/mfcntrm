@@ -1,0 +1,259 @@
+<?php
+
+if (!defined('COMMUN_TOOLS_PREFIX')) {
+  define('COMMUN_TOOLS_PREFIX', "communication_tools_");
+}
+
+define('COMMUNICATION_TOOLS_SEND_TO_A_FRIEND_FORM_PATH', 'send-to-a-friend');
+define('COMMUN_TOOLS_DEFAULT_PRELOADER_IMAGE_PATH', "img/communication_tools_preloader.gif");
+
+function communication_tools_init() {
+  $site_logo_path = base_path() . variable_get('file_public_path', 'sites/default/files') . '/' . str_replace('public://', '', variable_get(COMMUN_TOOLS_PREFIX . 'site_logo_print', ''));
+  drupal_add_js(array('communication_tools' => array('site_logo_print_path' => $site_logo_path)), 'setting');
+  drupal_add_js(array('communication_tools_preloader_image_path' => _communication_tools_get_path_preloader_image()), 'setting');
+}
+
+/**
+ * Get the Path of Iframe Preloader Image
+ *
+ */
+function _communication_tools_get_path_preloader_image() {
+
+  global $base_url;
+
+  $preloader_image_path            = variable_get(COMMUN_TOOLS_PREFIX . 'preloader_image');
+  $file_public_path                = variable_get('file_public_path');
+  $communication_tools_module_path = drupal_get_path('module', 'communication_tools');
+  
+  if (!empty($preloader_image_path)) {
+    return $base_url .'/'. $file_public_path . '/' . $preloader_image_path; 
+  }
+  else {
+    return $base_url .'/'. $communication_tools_module_path . '/' . COMMUN_TOOLS_DEFAULT_PRELOADER_IMAGE_PATH;
+  }
+}
+
+/**
+ * access callback for Send to a Friend form hook menu
+ * 
+ * @return boolean 
+ */
+function communication_tools_is_valid_path() {
+  module_load_include('inc', 'communication_tools', 'communication_tools.common');
+  $path = communication_tools_get_shared_path();
+  $parsed_url = drupal_parse_url($path);
+  
+  $is_valid_internal_path = !empty($path)? drupal_valid_path($parsed_url['path']) && !url_is_external($parsed_url['path']) : TRUE;
+  
+  return $is_valid_internal_path;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function communication_tools_menu() {
+
+  $items[COMMUNICATION_TOOLS_SEND_TO_A_FRIEND_FORM_PATH] = array(
+    'title' => 'Send to a friend',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('communication_tools_send_form'),
+    'access arguments' => array('access content'),
+    'access callback' => 'communication_tools_is_valid_path',
+    'type' => MENU_CALLBACK,
+    'file' => 'communication_tools_form.inc'
+  );
+
+  $items['admin/config/communication-tools'] = array(
+    'title' => 'Communication Tools Settings',
+    'description' => 'Change communications tools settings and texts.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('communication_tools_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'communication_tools.admin.inc',
+  );
+  
+  $items['admin/config/communication-tools/general-settings'] = array(
+    'title' => 'Communication Tools Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/config/communication-tools/admin-logs-interface'] = array(
+    'title' => 'Admin Logs Inferface',
+    'description' => 'Manage Communication Tools logs',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('communication_tools_admin_logs_interface_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'communication_tools.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+
+  $items['send-to-a-friend/cancel-button'] = array(
+    'title'             => 'Cancel',
+    'description'       => 'Send to a friend Cancel iframe',
+    'page callback'     => 'communication_tools_cancel_button',
+    'access arguments'  => array('access content'),
+    'type'              => MENU_CALLBACK,
+    'file'              => 'communication_tools_form.inc',
+    'delivery callback' => 'communication_tools_delivery_raw_page',
+  );
+
+  $items['send-to-a-friend/success-page'] = array(
+    'title'             => 'Success',
+    'description'       => 'Send to a friend success page',
+    'page callback'     => 'communication_tools_success_page',
+    'access arguments'  => array('access content'),
+    'type'              => MENU_CALLBACK,
+    'file'              => 'communication_tools_form.inc',
+    'delivery callback' => 'communication_tools_delivery_raw_page',
+  );
+
+  return $items;
+}
+
+function communication_tools_form_email_validate($element, $form_state) {
+  if ($form_state['values'][$element['#name']] && valid_email_address($form_state['values'][$element['#name']]) == FALSE) {
+    $element_name = str_replace(':', '', $element['#title']);
+    form_error($element, t("The email used in !element_name's field is not valid", array('!element_name' => $element_name)));
+  }
+}
+
+/**
+ *
+ * @file
+ * Block definition and rendering
+ *
+ * Implements hook_block_info().
+ *
+ */
+function communication_tools_block_info() {
+  $blocks['communication_tools_email'] = array(
+    'info' => t('Communication tools Email'),
+    'status' => TRUE,
+    'weight' => 100,
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+    'cache' => DRUPAL_NO_CACHE,
+    'region' => -1
+  );
+
+  $blocks['communication_tools_addthis'] = array(
+    'info' => t('Communication tools Addthis'),
+    'status' => TRUE,
+    'weight' => 100,
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+    'cache' => DRUPAL_NO_CACHE,
+    'region' => -1
+  );
+
+  $blocks['communication_tools_print'] = array(
+    'info' => t('Communication tools Print'),
+    'status' => TRUE,
+    'weight' => 100,
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+    'cache' => DRUPAL_NO_CACHE,
+    'region' => -1
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ */
+function communication_tools_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'communication_tools_email':
+      if (variable_get(COMMUN_TOOLS_PREFIX . 'show_email_icon', '')) {
+        drupal_add_library('system', 'ui.dialog');
+        $block['content'] = communication_tools_block_contents($delta);
+      }
+       break;
+    case 'communication_tools_addthis':
+      if (variable_get(COMMUN_TOOLS_PREFIX . 'show_addthis_icon', '')) {
+        $block['content'] = communication_tools_block_contents($delta);
+      }
+      break;
+    case 'communication_tools_print':
+      if (variable_get(COMMUN_TOOLS_PREFIX . 'show_print_icon', '')) {
+        $block['content'] = communication_tools_block_contents($delta);
+      }
+      break;
+  }
+  return $block;
+}
+
+/**
+ * A module-defined block content function.
+ */
+function communication_tools_block_contents($block_name) {
+  switch ($block_name) {
+    case 'communication_tools_email':
+      $destination = drupal_get_destination();
+      $destination = $destination['destination'];
+      $share_page_url = COMMUNICATION_TOOLS_SEND_TO_A_FRIEND_FORM_PATH;
+      
+      foreach (module_implements('communication_tools_destination_alter') as $module) {
+        call_user_func_array($module . '_' . 'communication_tools_destination_alter', array(&$destination));
+      }
+      
+      if ($destination != 'node') {
+        $share_page_url .=  "/" . $destination;
+      }
+      
+      $template_variables = array(
+        'email_block_link' =>  variable_get(COMMUN_TOOLS_PREFIX . 'email_block_link'),
+        'share_page_url'   => url($share_page_url),
+      );
+      
+      $block = array('#markup' => theme('communication_tools_email_block', $template_variables));
+      break;
+
+    case 'communication_tools_addthis':
+      $template_variables = array(
+        'addthis_button' => _addthis_create_button(array('build_mode' => 'block')),
+      );
+      $block = array('#markup' => theme('communication_tools_addthis_block', $template_variables));
+      break;
+    case 'communication_tools_print':
+      $block = array('#markup' => theme('communication_tools_print_block'));
+
+      foreach (module_implements('communication_tools_print_alter') as $module) {
+        call_user_func_array($module . '_' . 'communication_tools_print_alter', array(&$block));
+      }
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_theme().
+ *
+ */
+function communication_tools_theme($existing, $type, $theme, $path) {
+  $module_theme_path = drupal_get_path('module', 'communication_tools') . '/theme/';
+  return array(
+    'communication_tools_email_block' => array(
+      'template' => 'communication_tools_email_block',
+      'path' => $module_theme_path,
+    ),
+
+    'communication_tools_addthis_block' => array(
+      'template' => 'communication_tools_addthis_block',
+      'path' => $module_theme_path,
+    ),
+
+    'communication_tools_print_block' => array(
+      'template' => 'communication_tools_print_block',
+      'path' => $module_theme_path,
+    ),
+
+    'communication_tools_form' => array(
+      'template' => 'communication_tools_form',
+      'render element' => 'form',
+      'path' => $module_theme_path,
+    ),
+  );
+}

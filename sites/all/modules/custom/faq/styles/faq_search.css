@@ -1,0 +1,9 @@
+div#block-views-exp-faqs-faqs-page div.form-item-field-faq-question-value {
+  display: none;
+}
+
+div.views-exposed-faq-filter p {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 8px;
+}

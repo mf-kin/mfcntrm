@@ -1,0 +1,8 @@
+name = Testimonial
+description = Implements the Testimonials' management tasks
+core = 7.x
+package = pfizer
+version = "7.x-3.0"
+
+dependencies[] = node_reference
+dependencies[] = options

@@ -1,0 +1,87 @@
+CEM HUB CHANGELOG
+-----------------
+7.x-3.1 Thu, Jul 19, 2012
+  [BUGFIXES]
+  * cemhub.submission.inc
+    - Fixed bug in the function that generates file lines.
+
+7.x-3.0 Wed, Jun 20, 2012
+  [BUGFIXES]
+  * Group Date fields: When this option is flagged is checked if the fields exist in the webform.
+  * Print "Campaign Source ID" in file: Automatically removes whitespace when the Campaign Source ID is printed in the file.
+
+  [ENHANCEMENTS]
+  * Added new fields in the administrative settings form to each integrated webform:
+    - Age validation: Whether or not to use 18 age validation in the field DOB.
+    - Group date fields: Whether or not to send the date fields as a single entry in the text file.
+    - Limit of UII Submissions per day: Configure limit of submissions per day, the default value is 9999.
+  * Watchdog entries have been modified for better readability in output.
+  * Validation of folders, permissions and keys. Print warning message when you are not configured correctly.
+  * Some functions/files were organized.
+
+7.x-2.10 Mon, May 14, 2012
+  [BUGFIXES]
+  * cemhub.submission.inc
+    - Fixed apache dying with "Segmentation fault (11)", Set errormode to PHP WARNING rather than raise an exception.
+    - Fixed gnupg temporary files creation inside module dir after read the keychain from inside module directory,
+      re-set gpg home directory to were apache has write permission.
+
+7.x-2.9 Fri, Apr 27, 2012
+  [BUGFIXES]
+  * cemhub.module: Include translatable variables file.
+    - Fixed year validation on cemhub_age_validator_sign_up()
+    - Updated cemhub_age_validator_sign_up() validation function, so it's just executed if both month and year fields are selected.
+  * cemhub.admin.inc
+    - Made Vendor Settings fieldset collapsible
+    - Added a configuration to define whether or not the date fields should be grouped in a single file entry;
+  * cemhub.submission.inc
+    - Updated _cemhub_get_submission_fields() to not group field dates by default anymore. Now, it's done by cemhub_data_alter() hook, depending on the value set for cemhub_group_date_fields Drupal's variable (admin configuration);
+
+7.x-2.8 Tue, Mar 06, 2012
+  [ENHANCEMENTS]
+  * cemhub.variable.inc: Include translatable variables file.
+
+7.x-2.7 Wed, Dec 28, 2011
+  [BUGFIXES]
+  * cemhub.submission: removed the second "date" function that is called when generating the CEM Hub file's lines at the function
+                       _cemhub_build_file_line . Also update the PHP Doc explanining that variable.
+
+7.x-2.6 Wed, Dec 28, 2011
+  [BUGFIXES]
+  * cemhub.module: moved cemhub_age_validator_sign_up() function to cemhub.module as the module doesn't find the function
+    if declared in another file and the webform is divided into multi steps
+  * cemhub.validators.inc: deleted file
+
+7.x-2.5 Wed, Jan 04, 2012
+
+  [BUGFIXES]
+  * cemhub.common.inc: syntax error.
+
+7.x-2.4 Fri, Dec 20, 2011
+
+  [ENHANCEMENTS]
+  * cemhub.submission.inc: Small change that allows multiple answers
+        of a same question.
+  * cemhub.common.inc: Remove the group by of the query to fetch all
+        answers of a same question.
+
+7.x-2.3 Fri, Dec 02, 2011
+
+  [ENHANCEMENTS]
+  * cemhub.submission.inc: Overriding the Source Code that
+	is sent to CEMHub if the webform entry has a different
+	Source code (that has been passed through the parameter).
+
+
+
+7.x-2.2 Mon, Nov 21, 2011
+
+  [BUGFIXES]
+  * cemhub.validators.inc: Fixing form validation to not
+    throw exception if receive wrong date or even letters.
+
+7.x-2.1 Tue, Nov 8, 2011
+
+  [ENHANCEMENTS]
+  * webform_form_cemhub_base.tpl.php: Modifying strings for
+    drupal variables over admin configuration.

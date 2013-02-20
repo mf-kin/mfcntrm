@@ -1,0 +1,47 @@
+body {
+  font-family: Verdana;
+  font-size: 11px;
+}
+h1, h2, h3, td, p {
+  font-family: Verdana;
+  font-size: 11px;
+  margin: 0;
+}
+h1 {
+  font-size: 13px;
+}
+h2 {
+  font-size: 12px;
+  font-weight: normal;
+}
+h3 {
+  font-size: 13px;
+  font-weight: bold;
+  color: #600;
+  text-align: center;
+  margin-top: 30px;
+}
+table {
+  width: 100%;
+}
+tr {
+background:#eee;
+}
+tr.even {
+  background:#fff;
+}
+.story-wrapper {
+  position: relative;
+  padding: 0 2px;
+}
+.story-label {
+ 	float:left;
+  width: 14.6%;
+}
+.story-body {
+ 	float:right;
+  width: 84.4%;
+}
+.clear-both { 
+  clear: both;
+}

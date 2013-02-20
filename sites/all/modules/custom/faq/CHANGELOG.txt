@@ -1,0 +1,62 @@
+FAQ CHANGELOG
+-----------------
+7.x-2.9 Thu, July 19, 2012
+
+  [BUGFIX]
+  * faq.info, faq.module, inc/faq.common.inc, inc/faq.admin.inc, scripts/faq_search.js
+    * Restoring Mobile Support
+  * scripts/faq_search.js
+	* Fix summary results
+
+7.x-2.8 Tue, Mar 26 June, 2012
+
+  [ENHANCEMENTS]
+  * faq.admin.inc
+    * Add option to faq_answer_expansion_mode variable for only one collapsible
+  * faq_multiple_collapsible.js
+    * Add script with collapsible behavior of the last opened 
+
+7.x-2.4 Fri, Mar 23, 2012
+
+  [ENHANCEMENTS]
+  * faq.admin.inc
+    * Add variable to configure "Number Search Results" field
+  * faq.common.inc
+    * Add variable faq_search_results_number to Drupal.settings
+  * faq_search.js
+    * Add class to classify results by search or by click on taxonomy link
+    * Add class 'active' to 'all topics' when the user make a search
+    * If isset Drupal.settings.faq.faq_search_results, show message with total results number
+    * Add class 'edit-search-error' on input if there is an invalid search term
+    
+7.x-2.3 Wed, Dec 14, 2011
+
+  [ENHANCEMENTS]
+  * faq.info
+    * Updating module version due to minor functionality Javascript improvement
+  * faq_search.js
+    * Changed the Search button behavior: it doesn't submit the search when the user has entered no keywords anymore
+
+7.x-2.2 Thu, Dec 1, 2011
+
+  [ENHANCEMENTS]
+  * faq.info
+    * Updating module version due to code review changes
+  * faq.module
+    * Adding faq-answer-expandable class to answer div, in case faq_answer_expansion_mode Drupal variable is set to true (via admin page).
+    * Changed faq_block_view_alter() to include just the js and css files required by the search block
+    * Added faq_init() to add faq configuration to Drupal.settings
+    * Changed the logic inside faq_views_pre_render() to just be performed if views is faq;
+    * Adding js and css files in order to the FAQ list to work (before, the files were just added if the search block was present)
+  * inc/faq.common.inc
+    * Removed faq_add_js() and faq_add_css() functions and added faq_add_js_settings()
+  * styles/faq_base.css
+    * Renamed styles/faq.css to styles/faq_base.css, in order to avoid conflicts with potential faq.css file inside a theme
+    * Setting div.faq-answer-expandable as display none by default
+  * scripts/faq.js
+    * Renamed file to faq.search.js
+    * Refactored the logic to toogle the answer field
+    * Removed logic not related to search to faq_collapsible.js
+    * Replaced $(location).attr('pathname') by Drupal.settings.faq.faq_path
+  * faq_base.css (Renamed from faq.css)
+    * Moved search block related css to faq_search.css

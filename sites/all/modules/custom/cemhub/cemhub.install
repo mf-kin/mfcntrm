@@ -1,0 +1,453 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for the cemhub module.
+ */
+
+function cemhub_install() {
+  variable_set('cemhub_integration_enabled', FALSE);
+  variable_set('cemhub_delete_flatfile', FALSE);
+  variable_set('cemhub_delete_entries', FALSE);
+  
+  cemhub_create_webform();
+}
+
+/**
+ * Creates the webform node and insert the components of Sign Up webform.
+ */
+function cemhub_create_webform() {
+  $node = new stdClass();
+  $node->type = 'webform';
+  $node->title = 'Sign Up';
+  $node->language = LANGUAGE_NONE;
+  $node->status = 1;
+  node_object_prepare($node); // Set some default values.
+  $node = node_submit($node); // Prepare node for a submit
+  node_save($node);
+  
+  module_load_include('inc', 'webform', 'includes/webform.components');
+  $weight = 0;
+  $created_webform_nid = $node->nid;
+  foreach (cemhub_get_webform_components() as $form_key => $component) {
+    $default_values = array(
+      'nid'     => $created_webform_nid,
+      'pid'     => 0,
+      'value'   => '',
+      'weight'  => $weight++ 
+    );
+    webform_component_insert(array_merge($default_values, $component));
+  }
+}
+
+/**
+ * Return the components for Sign Up form.
+ * @return array Webform components 
+ */
+function cemhub_get_webform_components() {
+  $components = array(
+    'field_first_name' => array(
+      'form_key'  => 'field_first_name',  
+      'name'      => 'First Name:',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 15,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 15,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_last_name' => array(
+      'form_key'  => 'field_last_name',  
+      'name'      => 'Last Name:',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 25,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 25,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_email' => array(
+      'form_key'  => 'field_email',  
+      'name'      => 'Email:',
+      'type'      => 'email',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 60,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_address_line_1' => array(
+      'form_key'  => 'field_address_line_1',  
+      'name'      => 'Address Line 1:',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 50,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 50,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_address_line_2' => array(
+      'form_key'  => 'field_address_line_2',  
+      'name'      => 'Address Line 2:',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 50,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 50,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),
+    'field_city' => array(
+      'form_key'  => 'field_city',  
+      'name'      => 'City:',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 30,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 30,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_state' => array(
+      'form_key'  => 'field_state',  
+      'name'      => 'State:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'AL|Alabama
+                    AK|Alaska
+                    AS|American Samoa
+                    AZ|Arizona
+                    AR|Arkansas
+                    CA|California
+                    CO|Colorado
+                    CT|Connecticut
+                    DE|Delaware
+                    DC|District of Columbia
+                    FL|Florida
+                    GA|Georgia
+                    GU|Guam
+                    HI|Hawaii
+                    ID|Idaho
+                    IL|Illinois
+                    IN|Indiana
+                    IA|Iowa
+                    KS|Kansas
+                    KY|Kentucky
+                    LA|Louisiana
+                    ME|Maine
+                    MH|Marshall Islands
+                    MD|Maryland
+                    MA|Massachusetts
+                    MI|Michigan
+                    MN|Minnesota
+                    MS|Mississippi
+                    MO|Missouri
+                    MT|Montana
+                    NE|Nebraska
+                    NV|Nevada
+                    NH|New Hampshire
+                    NJ|New Jersey
+                    NM|New Mexico
+                    NY|New York
+                    NC|North Carolina
+                    ND|North Dakota
+                    MP|Northern Marianas Islands
+                    OH|Ohio
+                    OK|Oklahoma
+                    OR|Oregon
+                    PW|Palau
+                    PA|Pennsylvania
+                    PR|Puerto Rico
+                    RI|Rhode Island
+                    SC|South Carolina
+                    SD|South Dakota
+                    TN|Tennessee
+                    TX|Texas
+                    UT|Utah
+                    VT|Vermont
+                    VI|Virgin Islands
+                    VA|Virginia
+                    WA|Washington
+                    WV|West Virginia
+                    WI|Wisconsin
+                    WY|Wyoming',
+        'options_source' => 'united_states',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_zip' => array(
+      'form_key'  => 'field_zip',  
+      'name'      => 'Zip:',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 5,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 5,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => TRUE,
+    ),
+    'field_dob_month' => array(
+      'form_key'  => 'field_dob_month',  
+      'name'      => 'DOB:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => '01|01
+                    02|02
+                    03|03
+                    04|04
+                    05|05
+                    06|06
+                    07|07
+                    08|08
+                    09|09
+                    10|10
+                    11|11
+                    12|12',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_dob_year' => array(
+      'form_key'  => 'field_dob_year',  
+      'name'      => 'DOB Year:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'dummy|dummy',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_gender' => array(
+      'form_key'  => 'field_gender',  
+      'name'      => 'Gender:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'M|Male
+                    F|Female',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_children_under_age' => array(
+      'form_key'  => 'field_children_under_age',  
+      'name'      => 'Are there children under age 18 in your household:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'Yes|Yes
+                    No|No',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_site_contact_agreement' => array(
+      'form_key'  => 'field_site_contact_agreement',  
+      'name'      => variable_get('site_name', '') . ' contact agreement:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'NI|Yes, I would like to receive periodic promotions, special offers and timely updates or information about ' . variable_get('site_name', '') . '. I agree to the <a href="http://www.pfizer.com/general/privacy_policy_transitioned.jsp" title="Privacy Policy" target="_blank">Privacy Policy</a>.',
+        'multiple' => TRUE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),
+    'field_pfizer_contact_agreement' => array(
+      'form_key'  => 'field_pfizer_contact_agreement',  
+      'name'      => 'Pfizer contact agreement:',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'BI|Yes, I would like to receive periodic promotions, special offers and timely updates or information from Pfizer Consumer Healthcare, the makers of Centrum®, Advil®, and other leading brands. I agree to the  <a target="_blank" title="Privacy Policy" href="http://www.pfizer.com/general/privacy_policy_transitioned.jsp" class="">Privacy Policy</a>.',
+        'multiple' => TRUE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),      
+  );
+
+  return $components;
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function cemhub_uninstall() {
+  watchdog('cemhub', 'Deleting module variables.');
+  
+  // Deleting variables
+  db_delete('variable')->condition('name', 'cemhub_%', 'LIKE')->execute();
+}
+
+/**
+ * Implements hook_schema().
+ */
+function cemhub_schema() {
+  $schema['cemhub_fields'] = array(
+    'description' => 'Stores configuration Pfizer CEM HUB integration',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Primary Key: Unique ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'cid' => array(
+        'description' => 'The webform component (field) ID',
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'description' => 'Node ID of the referred Webform',
+        'type' => 'int',
+        'unsigned' => TRUE,  
+        'not null' => TRUE,
+      ),
+      'question_code' => array(
+        'description' => 'CEMHUB question identification code',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => FALSE,  
+      ),
+      'answer_code' => array(
+        'description' => 'CEMHUB answer identification code',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => FALSE,  
+      ),
+      'active' => array(
+        'description' => 'Status of activation of field',
+        'type' => 'char',
+        'length' => 1,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  $schema['cemhub_forms_config'] = array(
+    'description' => 'Stores configurations of Forms to Pfizer CEM HUB integration',
+    'fields' => array(
+      'id' => array(
+        'description' => 'Primary Key: Unique ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'description' => 'Node ID of the referred Webform',
+        'type' => 'int',
+        'unsigned' => TRUE,  
+        'not null' => TRUE,
+      ),
+      'survey_id' => array(
+        'description' => 'CEMHUB Survey ID of Form',
+        'type' => 'varchar',
+        'length' => 45,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'campaign_source' => array(
+        'description' => 'CEMHUB Campaign Source ID of Form',
+        'type' => 'varchar',
+        'length' => 45,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'last_submission_id' => array(
+        'description' => 'The Last Webform Submission registered',
+        'type' => 'int',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+        'default' => -1,
+      ),
+      'template_name' => array(
+        'description' => 'Name of template to the Form',
+        'type' => 'varchar',
+        'length' => 45,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'age_validation' => array(
+        'description' => 'Use form age validation or not',
+        'type' => 'char',
+        'length' => 1,
+        'default' => 1,
+      ),
+      'group_date_fields' => array(
+        'description' => 'Whether or not to send the date fields as a single entry',
+        'type' => 'char',
+        'length' => 1,
+        'default' => 1,
+      ),
+      'limit_submissions' => array(
+        'description' => 'Limit of Submissions per day',
+        'type' => 'int',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+        'default' => 9999,
+      ),
+      'active' => array(
+        'description' => 'Status of activation of the Form',
+        'type' => 'char',
+        'length' => 1,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  return $schema ;
+}

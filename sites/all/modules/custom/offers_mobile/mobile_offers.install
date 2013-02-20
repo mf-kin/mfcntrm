@@ -1,0 +1,40 @@
+<?php
+/**
+ * @file
+ * Mobile Offers module schema install and unistall
+ */
+
+function mobile_offers_uninstall() {
+  drupal_uninstall_schema('mobile_offers');
+}
+
+function mobile_offers_schema() {
+  $schema = array();
+  
+  $schema['mobile_offers_email'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Id for the user email.'
+      ),
+      'email_value' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'User email.'
+      ),
+      'created' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => time(),
+        'description' => 'Creation time'  
+      )  
+    ),
+    'primary key' => array('id'),
+  );
+  
+  return $schema;
+}

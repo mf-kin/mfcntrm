@@ -1,0 +1,101 @@
+<?php
+// $Id$
+/**
+ *
+ * @file
+ * Default definition
+*/
+if(!defined('COMMUN_TOOLS_PREFIX')) {
+  define('COMMUN_TOOLS_PREFIX', "communication_tools_");
+}
+
+/**
+ *
+ * Implements hook_install();
+ */
+function communication_tools_install() {
+  $module_attributes = _communication_tools_get_attributes();
+
+  foreach ($module_attributes as $input_element => $default_value) {
+    variable_set(COMMUN_TOOLS_PREFIX . $input_element , $default_value);
+  }
+  variable_set(COMMUN_TOOLS_PREFIX . 'site_logo_print', '');
+}
+
+function communication_tools_uninstall() {
+  $module_attributes = _communication_tools_get_attributes();
+
+  foreach (array_keys($module_attributes) as $input_element) {
+    variable_del(COMMUN_TOOLS_PREFIX . $input_element);
+  }
+}
+
+function _communication_tools_get_attributes() {
+  $form_header_text = "Fill in the information below to send an email message about this page to your friend. ".
+    "Privacy is important to us. To learn about our use of your information and your rights, ".
+    "please consult our !privacy_policy_link.";
+  $variables['subject'] = '!site_name';
+  $variables['email_body'] = "Dear @username@,<br/>";
+  $variables['email_body'] .= "@referer@ thought you would be interested in this link from @link@<br/>";
+  $variables['email_body'] .= "*Your email address has not been automatically added to our e-mail file.<br/>";
+  $variables['email_body'] .= "@footer@<br/>";
+  $variables['separator'] = ':';
+  $variables['send_button_text'] = 'Send';
+  $variables['cancel_button_text'] = 'Cancel';
+  $variables['form_header'] = $form_header_text;
+  $variables['privacy_policy_path'] = 'privacy_policy';
+  $variables['show_facebook_icon'] = FALSE;
+  $variables['show_addthis_icon'] = FALSE;
+  $variables['show_email_icon'] = TRUE;
+  $variables['success_page_path'] = 'send-to-a-friend/success-page';
+  $variables['facebook_block_link'] = 'Facebook page';
+  $variables['email_block_link'] = 'Share with a friend';
+  
+  return $variables;
+}
+
+function communication_tools_schema() {
+  $schema['communication_tools_logs'] = array(
+    'description' => '',
+    'fields' => array(
+      'log_id' => array(
+        'description' => 'Unique log id.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+      ),
+      'ip' => array(
+        'description' => 'The IP of the user who submitted the form.',
+        'type' => 'varchar',
+        'length' => 15,
+        'not null' => TRUE,
+      ),
+      'from_mail' => array(
+        'description' => 'The email of the user who sent the email.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ),
+      'to_mail' => array(
+        'description' => 'The email of the user whose the email has been sent to.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ),
+      'submitted' => array(
+        'description' => 'The time when the form has been submitted and the email sent.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'log_id' => array('log_id'),
+      'ip' => array('ip'),
+      'from' => array('from_mail'),
+      'to' => array('to_mail'),
+      'submitted' => array('submitted'),
+    ),
+    'primary key' => array('log_id'),
+  );
+
+  return $schema;
+}

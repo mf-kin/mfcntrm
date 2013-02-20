@@ -1,0 +1,148 @@
+<?php
+
+class CommunicationToolsSimpleTest extends DrupalWebTestCase {
+
+  private $_shared_url = NULL;
+  private $_form_path = NULL;
+  private $_submit_button = NULL;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Communication Tools Form Validation.',
+      'description' => 'Test Communication Tools form validation.',
+      'group' => 'Communication Tools',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('communication_tools');
+
+    // @see url() inside common.inc:2068
+    variable_set('https', TRUE);
+
+    $base_path = COMMUNICATION_TOOLS_SEND_TO_A_FRIEND_FORM_PATH;
+    $this->_shared_url = 'node/add';
+    $this->_form_path = $base_path . '/' . $this->_shared_url;
+    $this->_submit_button = t('Send');
+  }
+
+  public function testForm() {
+    $this->_checkValidSubmission();
+    $this->_checkInvalidMailFriend();
+    $this->_checkNameXssInjection();
+    $this->_checkBothEmailsInvalid();
+    $this->_checkBothEmailsEmpty();
+  }
+
+  private function _checkValidSubmission() {
+    $form_fields = array(
+      'communication_tools_email_yours'  => 'test1@ciandt.com',
+      'communication_tools_email_friend' => 'test1@ciandt.com',
+    );
+
+    $form_fields = $this->_fillFormFields($form_fields);
+    $this->drupalPost($this->_form_path, $form_fields, $this->_submit_button);
+    $this->assertText(t('Thank You! Your email has been sent.'));
+    $this->_checkLastSentMail(
+      $form_fields['communication_tools_name'],
+      $form_fields['communication_tools_email_yours'],
+      $form_fields['communication_tools_friends_name'],
+      $form_fields['communication_tools_email_friend'],
+      $this->_shared_url
+    );
+  }
+
+  private function _checkInvalidMailFriend() {
+    $form_fields = array(
+      'communication_tools_email_yours'  => 'test1@ciandt.com',
+      'communication_tools_email_friend' => 'testciandt.com',
+    );
+
+    $form_fields = $this->_fillFormFields($form_fields);
+    $this->drupalPost($this->_form_path, $form_fields, $this->_submit_button);
+    $this->assertText(t("The email used in Friend's Email's field is not valid"));
+  }
+
+  private function _checkNameXssInjection() {
+    $form_fields = array(
+      'communication_tools_name'         => "<script>alert('aasd');</script>",
+      'communication_tools_email_yours'  => 'test1@ciandt.com',
+      'communication_tools_email_friend' => 'test1@ciandt.com',
+    );
+
+    $form_fields = $this->_fillFormFields($form_fields);
+    $this->drupalPost($this->_form_path, $form_fields, $this->_submit_button);
+    $this->assertText(t('Thank You! Your email has been sent.'));
+    $this->_checkLastSentMail(
+      $form_fields['communication_tools_name'],
+      $form_fields['communication_tools_email_yours'],
+      $form_fields['communication_tools_friends_name'],
+      $form_fields['communication_tools_email_friend'],
+      $this->_shared_url
+    );
+  }
+
+  private function _checkBothEmailsInvalid() {
+    $form_fields = array();
+    $form_fields = $this->_fillFormFields($form_fields);
+    $this->drupalPost($this->_form_path, $form_fields, $this->_submit_button);
+    $this->assertText(t("The email used in Friend's Email's field is not valid"));
+    $this->assertText(t("The email used in Your Email's field is not valid"));
+  }
+
+  private function _checkBothEmailsEmpty() {
+    $form_fields = array();
+    $this->drupalPost($this->_form_path, $form_fields, $this->_submit_button);
+    $this->assertText(t('Your Email field is required.'));
+    $this->assertText(t("Friend's Email field is required."));
+  }
+
+  private function _checkLastSentMail($yours_name, $yours_email, $friends_name, $friends_email, $shared_url) {
+    module_load_include('inc', 'communication_tools', 'communication_tools_form');
+
+    $mails = variable_get('drupal_test_email_collector', array());
+
+    if (!count($mails)) {
+      return;
+    }
+
+    $form_state = array(
+      'values' => array(
+        'communication_tools_name'            => $yours_name,
+        'communication_tools_friends_name'    => $friends_name,
+        COMMUN_TOOLS_PREFIX . 'article_path'  => $shared_url,
+        COMMUN_TOOLS_PREFIX . 'article_title' => communication_tools_get_page_title($shared_url),
+      ),
+    );
+    $mail_body = communication_tools_build_email($form_state);
+
+    // Check original email.
+    $this->assertEqual($mails[0]['id'], 'communication_tools__mailer', 'Correct email id found.');
+    $this->assertEqual($mails[0]['headers']['From'], $yours_email, 'From address is correctly set.');
+    $this->assertEqual($mails[0]['to'], $friends_email, 'To address is correctly set.');
+    $this->assertEqual($mails[0]['body'], drupal_wrap_mail($mail_body));
+
+    variable_set('drupal_test_email_collector', array());
+  }
+
+  private function _fillFormFields($form_field_values = array()) {
+    $field_keys = array(
+      'communication_tools_name',
+      'communication_tools_email_yours',
+      'communication_tools_friends_name',
+      'communication_tools_email_friend',
+    );
+
+    $form_fields = array();
+    foreach ($field_keys as $key) {
+      if (!isset($form_field_values[$key])) {
+        $form_fields[$key] = $this->randomName(15);
+      }
+      else {
+        $form_fields[$key] = $form_field_values[$key];
+      }
+    }
+
+    return $form_fields;
+  }
+}

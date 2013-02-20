@@ -1,0 +1,23 @@
+HELGESON CHANGELOG
+-----------------
+7.x-2.1 Tue, May 16, 2012
+ [BUGFIXES]
+  * helgeson.file.inc
+   - Fixing the GNUPGHOME for a place that apache user has access to write.
+
+7.x-2.0 Tue, Apr 3, 2012
+PFI-3994 Helgeson
+- Creating a more generic version of the module, which makes a new hook available,
+so other modules may generate specific data.
+- helgeson.module
+  - Renamed module permission;
+- inc/helgeson.common.inc
+  - Removed helgeson_get_winners_by_date() function, which was specific to Chapstick Contest project (dependant on instant_win module);
+- inc/helgeson.cron.inc
+  - Updated helgeson_generate_and_send_file() to get data based on a hook_call, instead of calling a specific function;
+  - Added helgeson_populate_data_for_generating_csv(), responsible for calling hook implementations from other modules;
+- inc/helgeson.file.inc
+  - Removed helgeson_get_csv_column_headers(), which was specific to Chapstick Contest project;
+  - Removed helgeson_sort_winner_array_columns_for_csv(), which was specific to Chapstick Contest project;
+  - Renamed helgeson_get_winners_csv_lines() to helgeson_get_csv_file_contents();
+  - Removed helgeson_get_winners_csv_file_contents() function;

@@ -1,0 +1,273 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ * CouponsInc Register module
+ */
+
+define('COUPONSINC_COUPON_ID_WILDCARD', '%coupon');
+define('COUPONSINC_REGISTER_EMAIL', 'couponsinc_register_email');
+
+// CSS classes
+define('COUPONSINC_REGISTER_FORM_CLASS', 'couponsinc-register-form');
+
+/**
+ * Implements hook_preprocess_html
+ *
+ * @param array $variables
+ */
+function couponsinc_register_preprocess_html(&$variables) {
+  $variables['classes_array'][] = COUPONSINC_REGISTER_FORM_CLASS;
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param type $form
+ * @param type $form_state
+ * @param type $form_id
+ */
+function couponsinc_register_form_alter(&$form, &$form_state, $form_id) {
+  module_load_include('inc', 'couponsinc_register', 'inc/couponsinc_register.common');
+  $register_form_id = couponsinc_register_get_register_webform_form_id();
+
+  if ($form_id == $register_form_id){
+    // @see couponsinc_register.form.inc couponsinc_register_register_form()
+    // Webform node argument position passed to drupal_get_form().
+    $coupon_node_form_arg_position = 4;
+
+    $is_coupon_present = isset($form_state['build_info']['args'][$coupon_node_form_arg_position]) &&
+                         is_object($form_state['build_info']['args'][$coupon_node_form_arg_position]) &&
+                         $form_state['build_info']['args'][$coupon_node_form_arg_position]-> type == COUPONS_INC_NODE_TYPE;
+
+
+    if ($is_coupon_present) {
+      // @see couponsinc_register.form.inc couponsinc_register_register_form()
+      // Coupon node argument position passed to drupal_get_form().
+      $coupon_node_form_arg_position = 4;
+      $coupon_node = $form_state['build_info']['args'][$coupon_node_form_arg_position];
+
+      $form['#id'] = 'couponsinc-register-form';
+      $form['#theme'] = array('couponsinc_register_form');
+      $form['#attributes']['class'] = COUPONSINC_REGISTER_FORM_CLASS;
+      $form['coupon_node'] = array(
+        '#type' => 'value',
+        '#value' => $coupon_node
+      );
+
+      module_load_include('inc', 'couponsinc_register', 'inc/couponsinc_register.common');
+      $form['#action'] = couponsinc_register_get_register_form_path_by_coupon_nid($coupon_node->nid);
+
+      couponsinc_register_assign_submit_handlers($form);
+    }
+  }
+}
+
+/**
+ * Prepend (inserts as the first item) couponsinc_register_form_fill_hidden_fields()
+ * to $form[#submit], so we have a chance to change form field values before they are
+ * persisted to the database by default Webform's submit handler.
+ *
+ * Append couponsinc_register_form_handle_success_submission() to $form[#submit], so we
+ * can either send the coupon by mail to the user or redirect the user to the coupon
+ * URL at CouponsInc website.
+ *
+ * @param array $form
+ */
+function couponsinc_register_assign_submit_handlers(&$form) {
+  array_unshift($form['#submit'], 'couponsinc_register_form_fill_hidden_fields');
+  $form['#submit'][] = 'couponsinc_register_form_handle_success_submission';
+}
+
+/**
+ * Submission handler for CouponsInc Register webform.
+ *
+ * Fill in the coupon related hidden fields with coupon information.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function couponsinc_register_form_fill_hidden_fields(&$form, &$form_state) {
+  $coupon_node = $form['coupon_node']['#value'];
+
+  $offer_id = $coupon_node->field_couponsinc_offer_code[$coupon_node->language][0]['value'];
+  $coupon_id = uniqid();
+
+  $form_state['values']['submitted']['coupon_id'] = $coupon_id;
+  $form_state['values']['submitted']['offer_id'] = $offer_id;
+}
+
+/**
+ * Submission handler for CouponsInc Register webform.
+ *
+ * Send an email to the user or redirects him to the coupon page, according to the option
+ * set for couponsinc_register_coupon_behavior Drupal's variable.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function couponsinc_register_form_handle_success_submission(&$form, &$form_state) {
+  // Webform submit handler changes the $form_state['values']['submitted'],
+  // indexing it with numeric ids, instead of the fied_name. That's the reason
+  // why we read the values from submitted_tree instead.
+  $offer_id = $form_state['values']['submitted_tree']['offer_id'];
+  $coupon_id = $form_state['values']['submitted_tree']['coupon_id'];
+
+  $coupon_node = $form['coupon_node']['#value'];
+  
+  switch (variable_get('couponsinc_register_coupon_behavior', 'redirect')) {
+    case 'email':
+      $email = $form_state['values']['submitted_tree']['email'];
+      couponsinc_register_send_register_mail($coupon_node, $coupon_id, $email);
+      break;
+    case 'redirect':
+      $check_code = $coupon_node->field_couponsinc_check_code[$coupon_node->language][0]['value'];
+      $short_key = $coupon_node->field_couponsinc_short_key[$coupon_node->language][0]['value'];
+      $long_key = $coupon_node->field_couponsinc_long_key[$coupon_node->language][0]['value'];
+      $coupon_url = couponsinc_generate_link($offer_id, $check_code, $short_key, $long_key, $coupon_id);
+      
+      $form_state['redirect'] = array($coupon_url);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function couponsinc_register_menu() {
+  $items = array();
+
+  $items['admin/config/couponsinc/register'] = array(
+    'title' => 'Register Form',
+    'description' => 'General configuration for CouponsInc Register module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('couponsinc_register_admin_config_form'),
+    'access arguments' => array('administer couponsinc_register configuration'),
+    'file' => 'inc/couponsinc_register.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+
+  module_load_include('inc', 'couponsinc_register', 'inc/couponsinc_register.common');
+  $register_form_path = couponsinc_register_get_register_form_path();
+  $items[$register_form_path] = array(
+    'title'             => "Here's how to get your valuable coupon.",
+    'page callback'     => 'couponsinc_register_register_form',
+    'page arguments'    => array(couponsinc_get_coupon_wildcard_position()),
+    'access arguments'  => array('access content'),
+    'file'              => 'inc/couponsinc_register.register_form.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Tries to load couponsinc node, based on COUPONSINC_COUPON_ID_WILDCARD hook_menu wildcard.
+ * @see http://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_menu/7
+ * for wildcards documentation.
+ *
+ * @return FALSE if node is not found or isn't a COUPONS_INC_NODE_TYPE node type. couponsinc node on success.
+ */
+function coupon_load($coupon_id) {
+  $coupon_node = node_load($coupon_id);
+  if ($coupon_node != FALSE) {
+    if ($coupon_node->type != COUPONS_INC_NODE_TYPE) {
+      $coupon_node = FALSE;
+    }
+  }
+
+  return $coupon_node;
+}
+
+/**
+ * Returns the position of the COUPONSINC_COUPON_ID_WILDCARD hook_menu item wildcard.
+ * As the hook_menu item path is set dinamicaly (through the admin settings form),
+ * this function breaks the path and find the wildcard position, so we are able
+ * to pass it as the 'page arguments' parameters to the hook_menu item callback.
+ *
+ * @return int on Success. FALSE otherwise
+ */
+function couponsinc_get_coupon_wildcard_position() {
+  module_load_include('inc', 'couponsinc_register', 'inc/couponsinc_register.common');
+  $register_form_path = couponsinc_register_get_register_form_path();
+  $register_form_path = explode('/', $register_form_path);
+
+  $wildcard_position = array_search(COUPONSINC_COUPON_ID_WILDCARD, $register_form_path);
+
+  return $wildcard_position;
+}
+
+/**
+ * Implements hook_permission().
+ *
+ * @return array
+ */
+function couponsinc_register_permission() {
+  return array(
+    'administer couponsinc_register configuration' => array(
+      'description' => t('Administer CouponsInc Register coupons configuration.'),
+      'title' => t('Administer CouponsInc Register configuration'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_mail().
+ *
+ * @param type $key
+ * @param type $message
+ * @param type $params
+ */
+function couponsinc_register_mail($key, &$message, $params) {
+  module_load_include('inc', 'couponsinc_register', 'inc/couponsinc_register.mail');
+
+  $email_definition = couponsinc_register_get_mail_definition($key, $params);
+
+  $message['subject'] = $email_definition['subject'];
+  $message['body'] = $email_definition['body'];
+}
+
+/**
+ * Implements hook_mail_alter().
+ */
+function couponsinc_register_mail_alter(&$message) {
+  $is_couponsinc_register_email = (strpos($message['id'], 'couponsinc_register_') === 0);
+
+  if ($is_couponsinc_register_email) {
+    $message['headers']['MIME-Version'] = '1.0';
+    $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed; delsp=yes';
+    $message['headers']['Content-Transfer-Encoding'] = '8Bit';
+    $message['headers']['X-Mailer'] = 'Drupal';
+    $message['headers']['Return-Path'] = variable_get('site_mail', '');
+  }
+}
+
+/**
+ * Send a mail to the user, containing the link for his/her coupon.
+ *
+ * @param type $node
+ * @param type $pin_code
+ * @param type $email
+ * @return array @see drupal_mail() function.
+ */
+function couponsinc_register_send_register_mail($node, $pin_code, $email) {
+  if (is_int($node)) {
+    $node = node_load($node);
+  }
+
+  if ($node && $node->type == COUPONS_INC_NODE_TYPE) {
+    $offer_code = $node->field_couponsinc_offer_code[$node->language][0]['value'];
+    $check_code = $node->field_couponsinc_check_code[$node->language][0]['value'];
+
+    $params = array(
+      'offer_code' => $offer_code,
+      'check_code' => $check_code,
+      'pin_code' => $pin_code
+    );
+
+    return drupal_mail('couponsinc_register', COUPONSINC_REGISTER_EMAIL, $email, language_default(), $params);
+  }
+}

@@ -1,0 +1,12 @@
+fblikebutton CHANGELOG
+----------------------
+
+7.x-1.4 Mon, Jan 9, 2011
+
+  [BUGFIXES]
+  * fblikebutton.module: fix for use with multiblock module
+
+7.x-1.3 Thu, Jan 5, 2011
+
+  [BUGFIXES]
+  * fblikebutton.module: Removed protocol from iframe source, so the browser sets it to the current page protocol (http or https). Before, http was always used, leading to security warnings when displaying the block inside an https page.

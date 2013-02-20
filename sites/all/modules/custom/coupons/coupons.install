@@ -1,0 +1,296 @@
+<?php
+// $Id$ 
+
+/**
+ * @file 
+ */
+
+/**
+ * Implementation of hook_install() 
+ */
+function coupons_install() {
+  node_types_rebuild();
+  $types = node_type_get_types();
+  node_add_body_field($types['coupon']);
+  
+  _coupon_create_content_type_fields();
+}
+
+/**
+ * Create default fields for Coupon content type.
+ */
+function _coupon_create_content_type_fields() {
+  $fields = _coupons_get_content_type_fields();
+  
+  foreach ($fields as $field) {
+    field_create_field($field);
+    field_create_instance($field);
+  }
+}
+
+/**
+ * Implementation of hook_uninstall() 
+ */
+function coupons_uninstall() {
+  _coupons_delete_content_type_fields();
+  _coupons_delete_sign_up_form();
+  _coupons_delete_module_variables();
+  _coupons_delete_nodes();
+}
+
+/**
+ * Delete all the Coupon content type fields created upon module installation
+ */
+function _coupons_delete_content_type_fields() {
+  $fields = _coupons_get_content_type_fields();
+
+  foreach ($fields as $field) {
+    field_delete_instance($field);
+    field_delete_field($field['field_name']);
+  }
+}
+
+/**
+ * Delete the Sign Up webform used by the module
+ */
+function _coupons_delete_sign_up_form() {
+  $nid = variable_get('coupon_sign_up_form_id');
+  
+  if (isset($nid) && $nid != 0 && $nid != '') {
+    node_delete($nid);
+  }
+}
+
+/**
+ * Delete all Drupal variables created by the module
+ */
+function _coupons_delete_module_variables() {
+  variable_del('coupon_sign_up_form_id');
+  variable_del('coupons_email_updates_url');
+  variable_del('coupons_email_updates_title');
+  variable_del('coupons_header_email_updates_page');
+  variable_del('coupons_bottom_email_updates_page');
+  variable_del('coupon_email_to_send');
+  variable_del('coupon_sender_email');
+  variable_del('coupon_email_subject');
+  variable_del('coupon_email_content');
+  variable_del('coupon_days_before_expire');
+  variable_del('coupon_minutes_before_code_expire');
+  variable_del('coupon_remove_sign_up_form');
+  variable_del('coupon_image_font_size');
+}
+
+/**
+ * Deletes all nodes of type 'coupon'
+ */
+function _coupons_delete_nodes() {
+  $type = 'coupon';
+  $coupons = db_query('SELECT n.nid FROM {node} n WHERE n.type = :type', array(':type' => $type));
+  
+  foreach ($coupons as $node) {
+    node_delete($node->nid);
+  }
+}
+
+/**
+ * Returns an array with the Coupon content type fields definition
+ * @return array
+ */
+function _coupons_get_content_type_fields() {
+  $weight = 1;
+
+  $fields = array(
+    array(
+      'field_name' => 'field_coupon_id',
+      'type' => 'text',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Coupon ID',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+      'description' => t('The coupon\'s ID number, shown in the coupon image.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_value',
+      'type' => 'number_float',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Value',
+      'widget' => array(
+        'type' => 'number',
+        'weight' => $weight++,
+      ),
+      'description' => t('The discount value of the coupon, in dollars.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_campaign_id',
+      'type' => 'text',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Campaign ID',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+      'description' => t('The campaign\'s ID number.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_image',
+      'type' => 'image',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Coupon Image',
+      'widget' => array(
+        'type' => 'image_image',
+        'weight' => $weight++,
+      ),
+      'description' => t('The image of the coupon itself (which will be printed by the customer).'),
+    ),
+    array(
+      'field_name' => 'field_coupon_start_date',
+      'type' => 'datetime',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Start Date',
+      'widget' => array(
+        'type' => 'date_text',
+        'weight' => $weight++,
+      ),
+      'description' => t('The starting date of this coupon.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_end_date',
+      'type' => 'datetime',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'End Date',
+      'widget' => array(
+        'type' => 'date_text',
+        'weight' => $weight++,
+      ),
+      'description' => t('The ending date of this coupon.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_code_pos_x',
+      'type' => 'number_integer',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Code Position "x" Axis',
+      'widget' => array(
+        'type' => 'number',
+        'weight' => $weight++,
+      ),
+      'description' => t('The position where the coupon code will be placed on the coupon image ("x" axis, in pixels).'),
+    ),
+    array(
+      'field_name' => 'field_coupon_code_pos_y',
+      'type' => 'number_integer',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Code Position "y" Axis',
+      'widget' => array(
+        'type' => 'number',
+        'weight' => $weight++,
+      ),
+      'description' => t('The position where the coupon code will be placed on the coupon image ("y" axis, in pixels).'),
+    ),
+    array(
+      'field_name' => 'field_coupon_code_date_x',
+      'type' => 'number_integer',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Date Position "x" Axis',
+      'widget' => array(
+        'type' => 'number',
+        'weight' => $weight++,
+      ),
+      'description' => t('The position where the date will be placed on the coupon image ("x" axis, in pixels).'),
+    ),
+    array(
+      'field_name' => 'field_coupon_code_date_y',
+      'type' => 'number_integer',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Date Position "y" Axis',
+      'widget' => array(
+        'type' => 'number',
+        'weight' => $weight++,
+      ),
+      'description' => t('The position where the date will be placed on the coupon image ("y" axis, in pixels).'),
+    ),
+    array(
+      'field_name' => 'field_coupon_exp_time',
+      'type' => 'number_integer',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Expiration Time (in days)',
+      'widget' => array(
+        'type' => 'number',
+        'weight' => $weight++,
+      ),
+      'description' => t('The coupon\'s expiration time.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_save_image',
+      'type' => 'image',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Savings For You Image',
+      'widget' => array(
+        'type' => 'image_image',
+        'weight' => $weight++,
+      ),
+      'settings' => array(
+        'alt_field' => 1,
+        'title_field' => 1,
+      ),
+      'description' => t('The product\'s image for the coupons carousel.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_free_value_image',
+      'type' => 'image',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'Savings For You Coupon Free Value Image',
+      'widget' => array(
+        'type' => 'image_image',
+        'weight' => $weight++,
+      ),
+      'settings' => array(
+        'alt_field' => 1,
+        'title_field' => 1,
+      ),
+      'description' => t('The discount value image for this product in the carousel.'),
+    ),
+    array(
+      'field_name' => 'field_coupon_ext_url',
+      'type' => 'text',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'coupon',
+      'label' => 'External Url',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'weight' => $weight++,
+      ),
+      'description' => t('An external URL to the coupon.'),
+    ),
+  );
+
+  return $fields;
+}

@@ -1,0 +1,5 @@
+SITE MAP CHANGELOG
+-----------------
+7.x-1.0 (cit_version: 7.x-1.1) Tue, Feb 28, 2012
+  [BUGFIX]
+  * add a function title callback to make title translatable on sitemap hook_menu

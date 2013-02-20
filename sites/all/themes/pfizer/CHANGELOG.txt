@@ -1,0 +1,13 @@
+Pfizer-Theme CHANGELOG
+-----------------
+
+7.x-1.0.1 Tue, Nov 8, 2011
+
+  [ENHANCEMENTS]
+  * reset.css: Including body font style.
+  
+  [BUG-FIXES]
+  * template.php: Removing recursive function for sup
+    and special chars replace because this feature was 
+    moved into a module (see special_replace).  
+

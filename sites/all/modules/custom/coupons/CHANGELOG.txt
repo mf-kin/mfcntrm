@@ -1,0 +1,81 @@
+COUPONS CHANGELOG
+-----------------
+7.x-1.9 Tue, March 7, 2012
+  [ENHANCEMENTS]
+  * coupons.code.inc
+    - Change the name of function coupons_send_404_on_invalid_coupon_code() to coupons_redirect_to_coupon_form_on_invalid_coupon_code() and redirect the user to coupon page
+  * coupons.image.inc
+    - Change the call to the function coupons_redirect_to_coupon_form_on_invalid_coupon_code() 
+  * coupons.module
+    - Change the call to the function coupons_redirect_to_coupon_form_on_invalid_coupon_code() 
+	
+7.x-1.8 Tue, March 7, 2012
+  [BUGFIX]
+  * coupons.variable.inc
+    - additional file to make variables translatable.
+
+7.x-1.7 Fri, Feb 17, 2012
+  [ENHANCEMENTS]
+  * coupons.install
+    - Enable the options of alt and title for the savings for you image field.
+    - Enable the options of alt and title for the savings for you free value image field.
+  
+7.x-1.6 Mo, Jan 9, 2012
+  [BUGFIX]
+  * coupons.module
+    - fix an error with the coupon expiration date.	
+	
+7.x-1.5 Thu, Dec 16, 2011
+  [ENHANCEMENTS]
+  * coupons.form.inc
+    - Making it possible to override default CEMHUB source code configuration with specific coupon source code;
+  * coupons.module
+    - Updated coupons_form_alter() to populate field_coupon_campaign_id_overriden hidden field when $_GET['src'] (specific coupon source code) is present
+
+7.x-1.4 Thu, Dec 8, 2011
+  [ENHANCEMENTS]
+  * coupons.admin.inc
+    - Added configuration to set coupon printing orientation (landscape/portrait)
+  * coupons.image.inc
+    - Printing coupon as landscap if Safari version is below 5 or orientation admin configuration is set to landscape
+  * coupons.print.css
+    - Transformed Webkit hack into a generic selector (applicable to all browsers)
+    - Fixed coupon image width;
+    - Added margin reset, in order avoid duplicated margin issue;
+    - Added border to the coupon image;
+    - Added layout for landscape coupon version
+
+7.x-1.3 Fri, Nov 18, 2011
+
+  [ENHANCEMENTS]
+  * coupons.image.inc, coupons.admin.inc: changing
+    font-size to be a variable configurable by admin
+    interface.
+  [BUGFIXES]    
+  * coupons.module: Validation regarding start date
+    and end date.  
+
+7.x-1.2 Thu, Nov 17, 2011
+
+  [ENHANCEMENTS]
+  * coupons.image.inc:
+   - Remove the Drupal Image Style
+   - Rotate the image with the GD libary
+   - Add the print css to the page
+  * coupons.install:
+   - Remove the function to delete the image style
+  * coupons.module: 
+   - Remove the creation of the Drupal image style
+  * styles/coupons.print.css
+   - Add the print css file
+    
+7.x-1.1 Tue, Nov 8, 2011
+
+  [ENHANCEMENTS]
+  * all: Refactoring of functions comming from previous project
+    branch.
+  * coupons.form.inc: Filling up hidden fields with coupon 
+    infomation and also executing proper redirect after that to 
+    thank you page.
+  * coupons.image.inc, coupons..module: Including image style 
+    for coupon image generation. Adding rotation for print image.

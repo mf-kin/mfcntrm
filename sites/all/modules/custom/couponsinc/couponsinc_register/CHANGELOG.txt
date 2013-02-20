@@ -1,0 +1,10 @@
+COUPONSINC_REGISTER CHANGELOG
+-----------------
+
+7.x-2.0 Wed, Jul 11, 2012
+  * Certain function calls have changed.
+  Changed files:
+   - couponsinc_register.module
+   - inc/couponsinc_register.mail.inc
+
+7.x-1.0 Fri, Apr 27, 2012

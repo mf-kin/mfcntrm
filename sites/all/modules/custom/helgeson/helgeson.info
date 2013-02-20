@@ -1,0 +1,6 @@
+name = Helgeson
+description = Enable integration with Helgeson platform
+package = pfizer
+version = "7.x-2.1"
+core = 7.x
+files[] = helgeson.module

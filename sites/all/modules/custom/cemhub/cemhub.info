@@ -1,0 +1,7 @@
+name = CEM HUB
+description = Add CEM HUB related functions
+package = pfizer
+version = "7.x-3.1"
+core = 7.x
+files[] = cemhub.module
+dependencies[] = webform

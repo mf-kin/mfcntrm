@@ -1,0 +1,12 @@
+name = FAQ module
+description = Manages FAQ (questions/answers) content, providing a search enabled listing
+package = pfizer
+version = "7.x-2.9"
+core = 7.x
+
+files[] = faq.module
+dependencies[] = taxonomy
+dependencies[] = views
+dependencies[] = nodequeue
+dependencies[] = trigger
+dependencies[] = better_exposed_filters

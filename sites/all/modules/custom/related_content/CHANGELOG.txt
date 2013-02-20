@@ -1,0 +1,9 @@
+RELATED CONTENT CHANGELOG
+-----------------
+7.x.0.3 Tue, Feb 28, 2012
+  [BUGFIXES]
+  * related_content.module: Add t function to Text Links
+
+7.x.0.2 Wed, Nov 30, 2011
+  [ENHANCEMENTS] 
+  * related_content.info: Updated module package to be consistent with other Pfizer modules

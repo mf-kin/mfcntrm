@@ -1,0 +1,10 @@
+; $Id$ 
+name = Google maps live search
+description = Enable to get stores on a given address
+package = pfizer
+version = "7.x-3.8"
+core = 7.x
+
+stylesheets[screen][] = styles/gmapslivesearch.css
+
+dependencies[] = list

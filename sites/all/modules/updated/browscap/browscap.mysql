@@ -1,0 +1,36 @@
+CREATE TABLE browscap (
+  useragent varchar(255) NOT NULL default '',
+  parent varchar(64) NOT NULL default '',
+  browser varchar(64) NOT NULL default '',
+  version varchar(8) NOT NULL default '',
+  majorversion varchar(8) NOT NULL default '',
+  minorversion varchar(8) NOT NULL default '',
+  platform varchar(8) NOT NULL default '',
+  authenticodeupdate varchar(8) NOT NULL default '',
+  cssversion tinyint(4) NOT NULL default '0',
+  frames tinyint(4) NOT NULL default '0',
+  iframes tinyint(4) NOT NULL default '0',
+  htmltables tinyint(4) NOT NULL default '0',
+  cookies tinyint(4) NOT NULL default '0',
+  backgroundsounds tinyint(4) NOT NULL default '0',
+  vbscript tinyint(4) NOT NULL default '0',
+  javascript tinyint(4) NOT NULL default '0',
+  javaapplets tinyint(4) NOT NULL default '0',
+  activexcontrols tinyint(4) NOT NULL default '0',
+  cdf tinyint(4) NOT NULL default '0',
+  aol tinyint(4) NOT NULL default '0',
+  beta tinyint(4) NOT NULL default '0',
+  win16 tinyint(4) NOT NULL default '0',
+  crawler tinyint(4) NOT NULL default '0',
+  stripper tinyint(4) NOT NULL default '0',
+  wap tinyint(4) NOT NULL default '0',
+  netclr tinyint(4) NOT NULL default '0',
+  PRIMARY KEY  (useragent)
+);
+
+CREATE TABLE browscap_statistics (
+  parent VARCHAR(255) NOT NULL,
+  counter INT DEFAULT '0' NOT NULL,
+  is_crawler TINYINT(1) DEFAULT '0' NOT NULL,
+  PRIMARY KEY (parent)
+);

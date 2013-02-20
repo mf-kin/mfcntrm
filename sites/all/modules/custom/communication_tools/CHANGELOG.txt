@@ -1,0 +1,67 @@
+Communication Tools CHANGELOG
+-----------------
+7.x-1.10 Mon, Mar 5, 2012
+   [ENHANCEMENTS]
+  * communication_tools.variable.inc: add file to make variables translatable
+  * communication_tools_form.inc: Change 'send' button to translatable variable
+    and change privacy policy link from a variable_get + t() to a translatable 
+    variable too.
+
+7.x-1.9 Fri, Feb 24th, 2012
+   [ENHANCEMENTS]
+  * communication_tools.js: Changes ids per classes and modify jquery selectors.
+  
+7.x-1.8 MOn, Jan 9, 2012
+   [ENHANCEMENTS]
+  * communication_tools.js: add the autoRezisePopup() function for autoresize the popups
+	
+7.x-1.7 Wed, Jan 4, 2012
+  [BUGFIXES]
+  * jquery.printElement.min.js: Adding a sufix to window.open name parameter, so IE doesn't raise an error if the user clicks the print button again, while a
+    previous print popup is open
+    
+7.x-1.6 Mon, Dec 28, 2011
+  [ENHANCEMENTS]  
+  * communication_tools.module: implemented communication_tools_destination_alter hook enable other modules to alter the share url;
+
+7.x-1.5 Mon, Dec 26, 2011
+  [ENHANCEMENTS]  
+  * communication_tools.admin.inc: Option to print shared content 
+    title on email form and turn the email success message configurable
+  * communication_tools_form.inc: add trim function on email form validate
+    to strip whitespace from the beginning and end of strings
+  * theme/communication_tools_form.tpl.php: Insert the shared content title
+    field
+
+7.x-1.4 Wed, Dec 14, 2011
+  [ENHANCEMENTS]
+  * communication_tools.js: Fixed layout issue on IE by removing
+    old fix which is not necessary anymore.
+
+7.x-1.3 Thu, Dez 1, 2011
+  [BUGFIXES]
+  * validating the url before sending the email
+    
+7.x-1.2 Thu, Nov 17, 2011
+  [ENHANCEMENTS]
+  * communication_tools.js: Fixing the issue related
+    to the iframe dialog call. The iframe page was called
+    twice. Now it's being called just once.
+
+7.x-1.1 Thu, Nov 17, 2011
+
+  [ENHANCEMENTS]
+  * all: Security enhancements about recaptcha and
+    security team requirements.
+  * communication_tools.admin.inc: Administration
+    interface for viewing log IPs.
+  * communication_tools.install: Schema for log ip tables.
+  * communication_tools_form.inc: Send to a friend validation
+    following security team requirements.
+
+7.x-1.0 Tue, Nov 8, 2011
+
+  [ENHANCEMENTS]
+  * all: Refactoring to close stable version 1.0
+  * communication_tools.js: Including pre-loader
+    functionatility.

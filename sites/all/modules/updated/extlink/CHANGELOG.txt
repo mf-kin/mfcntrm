@@ -1,0 +1,36 @@
+EXTLINK CHANGELOG
+-----------------
+7.x-2.0 Wed, May 9, 2012
+[BUGFIXES]
+  * extlink.js: 
+    * Fixed bug related to mobile tools variable
+
+7.x-1.19 Wed, Mar 14, 2012
+[BUGFIXES]
+  * extlink.js: 
+    * Add title attributes on Ok/Cancel/Close buttons
+    
+7.x-1.17 Mon, Mar 05, 2012
+  [ENHANCEMENTS]
+  * extlink.variable.inc: 
+    * add file to make varibales translatable
+    
+7.x-1.16 Tue, Jan 24, 2012
+  [BUGFIXES]
+  * extlink.js: 
+    * Fixed module to print the button texts. Before, it was just adding the titles (message displayed on mouse hover)
+    * extlink.js: All dialogs on page created by the dialog plugin were being removed when an external link was fired. Fixed the bug by removing only the dialog with the 'extlink-message' class
+
+7.x-1.15 Tue, Jan 24, 2012
+  [ENHANCEMENTS]
+  * extlink.js: Adding an ID for each button
+  
+7.x-1.14 Thu, Nov 29, 2011
+  [ENHANCEMENTS]
+  * extlink.js: Adding title on overlay buttons
+
+7.x-1.13 Tue, Nov 8, 2011
+  [ENHANCEMENTS]
+  * extlink.js: Including blur effect into external link
+    overlay appearence.
+

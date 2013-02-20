@@ -1,0 +1,7 @@
+fieldset.selectors-fieldset.updated {
+  background-color: #E6DEED;
+}
+
+tr.deleted fieldset.selectors-fieldset {
+  background-color: #FBE3E4;
+}

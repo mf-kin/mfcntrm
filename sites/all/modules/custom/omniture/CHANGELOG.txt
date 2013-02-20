@@ -1,0 +1,69 @@
+omniture CHANGELOG
+-----------------
+  
+7.x-2.2 Mon, Feb 06, 2012
+  [BUGFIX]
+  * removed 'updated' field from _omniture_selectors_get_entry_fields_from_form_state_by_id() function as it is just a field for updating purposes but not to be saved on the database. As it is not a field on the table, it was causing an error on submission.
+  
+7.x-2.1 Tue, Jan 17, 2012
+  [ENHANCEMENT]
+  * inc/omniture.selectors_admin.inc
+    * added hidden field to each selector so it is possible to know which were modified and perform less queries to the database
+  
+  * scripts/omniture.general_selectors.js
+    * added javascript to mantain which selectors were modified
+  
+  * scripts/omniture.code_snippet.js
+    * moved table resize to specific scripts/omniture.general_selectors.js file
+    * removed console.log() #fail
+    
+  * theme/omniture.general_selectors.css
+    * general selectors style
+  
+7.x-2.0 Fri, Jan 13, 2012
+  [EVOLUTION]
+
+  * omniture.install
+    * Updated omniture schema to create a new table omniture_selectors used by the respective admin page
+    * load default configuration to the module on install with the scripts/defaults/*.js files
+    * Define module heavy weight on install so it is one of the latest modules to run
+  
+  * omniture.module
+    * Moved inclusion of json variables to hook_page_alter() instead of hook_init();
+  
+  * inc/omniture.admin.inc
+    * Added configuration fields for s.dc, s.visitorNamespace, s.trackingServer and s.trackingServerSecure
+    * Separated administration tabs so it is more organized (general settings, javascript, by page, by content type and general selectors)
+    * Configurable 'Page not found' name, defaults to "404";
+    * All omniture configurations are now configurable
+      * Added textarea with ConfigSection javascript;
+      * Added textarea with Global scope javascript (video trackings);
+      * Added textarea with PluginsSection javascript
+      * Added textarea with ModulesSection javascript
+      * Added textarea with s_code core javascript;
+    * added 'use-snippet' class to textareas and textfields so syntax highlight works
+
+  * inc/omniture.common.inc
+    * Set breadcrumb correctly (drupal_get_breadcrumb() instead of menu_get_active_breadcrumb());
+    * Organized functions into smaller ones;
+    * created code generation functions for the configurations specified in general selectors admin page
+    * added functions to differ between behavior codes and common codes so code can be properly created
+    * centralized code generation inside _omniture_generate_selector_body_code() function
+    * created function to include files so syntax highlight works
+    
+  * inc/omniture.selectors_admin.inc
+    * Created general selectors admin page where it is possible to create selector trackings through the interface
+
+  * theme/omniture_selectors_admin_form_header.tpl.php
+    * added theme folder and omniture_selectors_admin_form_header.tpl.php with html description for the general selectors admin page
+  
+  * scripts/omniture.code_snippet.js
+    * apply code snippet syntax highlight behavior to fields with 'use-snippet' class
+
+  * scripts/s_code.js
+    * Refactored multiple file includes, now it's made inside s_code.js, using placeholders to replace configurable code;
+    * created a omniture object globally available so tracking can be easily performed by directly calling it (ex: omniture.sendData(JSON))
+    * created omnitureInfo object globally available with informations of the current page defined by the module in omniture.common.inc
+    
+  * scripts/plugins/jquery.snippet.2.0.0
+    * added snippet plugin

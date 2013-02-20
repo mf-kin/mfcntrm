@@ -1,0 +1,5 @@
+name = Omniture
+description = Provides a dynamic way of tracking all site pages
+core = 7.x
+package = pfizer
+version = "7.x-2.2"

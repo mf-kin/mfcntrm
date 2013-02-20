@@ -1,0 +1,59 @@
+<?php
+/**
+ * @file
+ * Install file for Special Replace module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function special_replace_install() {
+  
+}
+
+/**
+ * Implements hook_schema().
+ */
+function special_replace_schema() {
+  $schema['special_replace'] = array(
+    'description' => 'Special Replace specific configuration.',
+    'fields' => array(
+      'srid' => array(
+        'description' => 'The primary identifier for an entry.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'pattern' => array(
+        'description' => 'The original pattern to be replaced.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'replacement' => array(
+        'description' => 'The word or pattern to replace by.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'active' => array(
+        'description' => 'Whether or not this rule is active.',
+        'type' => 'int',
+        'size' => 'tiny',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'default' => 0,
+        'description' => 'Position displayed in the table',  
+      ),
+    ),
+    'indexes' => array(
+      'srid' => array('srid'),
+    ),
+    'primary key' => array('srid'),
+  );
+  
+  return $schema;
+}

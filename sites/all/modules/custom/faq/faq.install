@@ -1,0 +1,317 @@
+<?php
+
+/**
+ * @file
+ * Install file for FAQ module.
+ */
+
+define('FAQ_VOCABULARY_MACHINE_NAME', 'faq_vocabulary_terms');
+define('FAQ_NODE_TYPE', 'faq');
+define('FAQ_NODEQUEUE_NAME', 'faqs');
+
+/**
+ * Implements hook_install().
+ */
+function faq_install() {
+  _faq_create_taxonomy();
+
+  node_types_rebuild();
+  $available_node_types = node_type_get_types();
+
+  _faq_add_default_content_type_fields();
+
+  _faq_create_nodequeue();
+  _faq_create_nodequeue_action();
+  _faq_create_nodequeue_trigger();
+
+  $module_attributes = _faq_get_attributes();
+
+  foreach ($module_attributes as $input_element => $default_value) {
+    variable_set('faq_' . $input_element , $default_value);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function faq_uninstall() {
+  _faq_delete_nodes();
+  _faq_delete_nodequeue_trigger();
+  _faq_delete_nodequeue_action();
+  _faq_delete_nodequeue();
+  _faq_delete_default_content_type_fields();
+  _faq_delete_content_type();
+  _faq_delete_taxonomy();
+  cache_clear_all();
+
+  $module_attributes = _faq_get_attributes();
+
+  foreach (array_keys($module_attributes) as $input_element) {
+    variable_del('faq_' . $input_element);
+  }
+}
+
+function _faq_create_taxonomy() {
+  taxonomy_vocabulary_save((object) array(
+    'name'         => 'FAQ Vocabulary',
+    'machine_name' => FAQ_VOCABULARY_MACHINE_NAME,
+  ));
+}
+
+function _faq_delete_taxonomy() {
+  $query = <<<QUERY
+    SELECT v.vid
+      FROM {taxonomy_vocabulary} v
+     WHERE v.machine_name = :machine_name
+QUERY;
+
+  $args = array(
+    ':machine_name' => FAQ_VOCABULARY_MACHINE_NAME,
+  );
+
+  $vid = db_query($query, $args)->fetchField();
+  if (!empty($vid)) {
+    taxonomy_vocabulary_delete($vid);
+  }
+}
+
+function _faq_add_default_content_type_fields() {
+  $fields = _faq_get_content_type_fields_definition();
+
+  foreach ($fields as $field) {
+    field_create_field($field);
+    field_create_instance($field);
+  }
+}
+
+function _faq_delete_default_content_type_fields() {
+  $fields = _faq_get_content_type_fields_definition();
+
+  foreach ($fields as $field) {
+    field_delete_instance($field);
+    field_delete_field($field['field_name']);
+  }
+}
+
+function _faq_delete_nodes() {
+  $query = <<<QUERY
+    SELECT n.nid
+      FROM {node} n
+     WHERE n.type = :type
+QUERY;
+
+  $args = array(
+    ':type' => FAQ_NODE_TYPE,
+  );
+
+  $faqs = db_query($query, $args);
+  foreach($faqs as $node) {
+    node_delete($node->nid);
+  }
+}
+
+function _faq_delete_content_type() {
+  node_type_delete(FAQ_NODE_TYPE);
+}
+
+function _faq_create_nodequeue() {
+  $queue = new stdClass();
+
+  $queue->title = 'FAQs';
+  $queue->name = FAQ_NODEQUEUE_NAME;
+  $queue->subqueue_title = '';
+  $queue->size = 0;
+  $queue->link = '';
+  $queue->link_remove = '';
+  $queue->owner = 'nodequeue';
+  $queue->types = array('faq');
+  $queue->show_in_links = 0;
+  $queue->show_in_tab = 1;
+  $queue->show_in_ui = 1;
+  $queue->i18n = 0;
+  $queue->reverse = 0;
+  $queue->reference = '';
+  $queue->roles = array('3');
+  $queue->subqueues = array();
+  $queue->new = true;
+  $queue->add_subqueue = array (0 => $queue->title); // match title above
+
+  nodequeue_save($queue);
+}
+
+function _faq_delete_nodequeue() {
+  $faq_queue_id = _faq_get_nodequeue_id();
+  nodequeue_delete($faq_queue_id);
+}
+
+function _faq_get_nodequeue_id() {
+  $faq_queue_id = NULL;
+
+  $map = nodequeue_get_qid_map();
+  if (isset($map[FAQ_NODEQUEUE_NAME])) {
+    $faq_queue_id = $map[FAQ_NODEQUEUE_NAME];
+  }
+
+  return $faq_queue_id;
+}
+
+function _faq_get_content_type_fields_definition() {
+  $weight = 0;
+
+  $fields = array(
+    array(
+      'field_name' => 'field_faq_question',
+      'type' => 'text_long',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'faq',
+      'label' => t('Question'),
+      'widget' => array(
+        'type' => 'text_textarea',
+        'weight' => $weight++,
+      ),
+    ),
+    array(
+      'field_name' => 'field_faq_answer',
+      'type' => 'text_with_summary',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'faq',
+      'label' => t('Answer'),
+      'widget' => array(
+        'type' => 'text_textarea_with_summary',
+        'weight' => $weight++,
+      ),
+      'settings' => array(
+        'display_summary' => TRUE
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'text_default',
+        ),
+        'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'text_summary_or_trimmed',
+        ),
+      ),
+    ),
+    array(
+      'field_name' => 'field_faq_filter',
+      'type' => 'taxonomy_term_reference',
+      'entity_type' => 'node',
+      'bundle' => 'faq',
+      'label' => t('Vocabulary Topic'),
+      'translatable' => TRUE,
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => FAQ_VOCABULARY_MACHINE_NAME,
+            'parent' => 0,
+          ),
+        ),
+      ),
+      'widget' => array(
+        'type' => 'options_select',
+        'weight' => $weight++,
+      ),
+    ),
+  );
+
+  return $fields;
+}
+
+/**
+ * Add FAQ automatically on nodequeue when it is created
+ */
+function _faq_create_nodequeue_action() {
+  $attributes = _faq_get_nodequeue_action_definition();
+  actions_save($attributes['function'], $attributes['type'], $attributes['params'], $attributes['label']);
+}
+
+function _faq_get_nodequeue_action_id() {
+  $query = <<<QUERY
+    SELECT COALESCE(MAX(aid), 0) AS aid
+      FROM {actions}
+     WHERE type = :type
+       AND callback = :function
+       AND parameters = :params
+QUERY;
+
+  $attributes = _faq_get_nodequeue_action_definition();
+  $args = array(
+    ':type'     => $attributes['type'],
+    ':function' => $attributes['function'],
+    ':params'   => serialize($attributes['params'])
+  );
+
+  $aid = db_query($query, $args)
+         ->fetchField();
+
+  return $aid;
+}
+
+function _faq_get_nodequeue_action_definition() {
+  $queue_id = _faq_get_nodequeue_id();
+
+  $attributes = array(
+    'function' => 'nodequeue_add_action',
+    'label'    => 'Add to FAQ node to Nodequeues upon node creation',
+    'type'     => 'node',
+    'params'   =>  array(
+      'qids' => array(
+        $queue_id,
+      ),
+    ),
+  );
+
+  return $attributes;
+}
+
+
+/**
+ * Create the trigger to add a newly created faq item to the nodequeue
+ */
+function _faq_create_nodequeue_trigger() {
+  db_insert('trigger_assignments')
+    ->fields(
+        array(
+          'hook'   => 'node_insert',
+          'aid'    => _faq_get_nodequeue_action_id(),
+          'weight' => _faq_get_nodequeue_trigger_weight(),
+        )
+    )
+    ->execute();
+}
+
+function _faq_delete_nodequeue_trigger() {
+  db_delete('trigger_assignments')
+    ->condition('hook', 'node_insert')
+    ->condition('aid', _faq_get_nodequeue_action_id())
+    ->execute();
+}
+
+function _faq_delete_nodequeue_action() {
+  $action_id = _faq_get_nodequeue_action_id();
+  actions_delete($action_id);
+}
+
+function _faq_get_nodequeue_trigger_weight() {
+  $query = <<<QUERY
+    SELECT COALESCE(MAX(weight), 0) + 1 AS weight
+      FROM {trigger_assignments}
+     WHERE hook = 'node_insert'
+QUERY;
+
+  $weight = db_query($query)->fetchField();
+
+  return $weight;
+}
+
+/**
+ * All the variables the module creates
+ */
+function _faq_get_attributes() {
+  $variables['answer_expansion_mode'] = 0;
+  return $variables;
+}

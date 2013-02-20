@@ -1,0 +1,88 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Helgeson integration functionality.
+ */
+
+define('HELGESON_EXTENSION_GNUPG_NAME', 'gnupg');
+define('HELGESON_EXTENSION_SSH_NAME', 'ssh2');
+define('HELGESON_MESSAGE_ERROR_EXTENSION_SSH', 'The extension SSH2 must be installed and enabled on the server so that data are sent to the Helgeson platform.');
+define('HELGESON_MESSAGE_ERROR_EXTENSION_GNUPG', 'The extension GNUPG must be installed and enabled on the server so that the files are encrypted.');
+define('HELGESON_MESSAGE_ERROR_PRIVATE_FILE_SYSTEM', 'This module Requires Drupal Private file system path,  where private files will be stored, to be set. <br> Set it on: Configuration > Media > File system.');
+
+/**
+ * Implements hook_permission().
+ */
+function helgeson_permission() {
+  return array(
+    'administer helgeson configuration' => array(
+      'title' => t('Configure Helgeson integration'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu()
+ */
+function helgeson_menu() {
+
+  $weight = 0;
+
+  $items = array();
+
+  $items['admin/config/helgeson'] = array(
+    'title'            => 'Helgeson',
+    'description'      => 'General',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('helgeson_general_settings_form'),
+    'access arguments' => array('administer helgeson configuration'),
+    'file'             => 'inc/helgeson.admin.inc',
+    'weight'           => $weight,
+  );
+
+  $items['admin/config/helgeson/general'] = array(
+    'title'  => 'General',
+    'type'   => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => $weight++,
+  );
+
+  $items['admin/config/helgeson/file-transmission'] = array(
+    'title'            => 'File Transmission',
+    'description'      => 'File Transmission',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('helgeson_file_transmission_settings_form'),
+    'access arguments' => array('administer helgeson configuration'),
+    'file'             => 'inc/helgeson.admin.inc',
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => $weight++,
+  );
+
+  $items['admin/config/helgeson/batchrun'] = array(
+    'title'            => 'Run Job Manually',
+    'description'      => 'Force to Run job for Helgeson',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('helgeson_run_cronjob_manually_form'),
+    'access arguments' => array('administer helgeson configuration'),
+    'file'             => 'inc/helgeson.admin.inc',
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => $weight++,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function helgeson_cron() {
+  module_load_include('inc', 'helgeson', 'inc/helgeson.common');
+
+  if (helgeson_should_run_exportation()) {
+    variable_set('helgeson_last_cron_run', date('Ymd'));
+
+    module_load_include('inc', 'helgeson', 'inc/helgeson.cron');
+    helgeson_generate_and_send_file();
+  }
+}

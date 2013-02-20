@@ -1,0 +1,6 @@
+div.ajax-progress {
+  display: inline-table;
+  float: none;
+  margin-left: 10px;
+  width: 200px;
+}

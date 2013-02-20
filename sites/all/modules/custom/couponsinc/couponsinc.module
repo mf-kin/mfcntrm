@@ -1,0 +1,159 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * couponsinc integration functionality.
+ */
+
+define('COUPONS_INC_NODE_TYPE', 'couponsinc_coupons_type');
+define('COUPONS_INC_BASE_URL', 'http://bricks.coupons.com/enable.asp');
+define('COUPONS_INC_CUSTOM_FILTER_TYPE', 'filter_coupon_inc');
+
+/**
+ * Implements hook_init().
+ */
+function couponsinc_init() {
+  module_load_include('inc', 'couponsinc', 'inc/couponsinc.utils');
+}
+
+/**
+ * Implements hook_permission().
+ */
+function couponsinc_permission() {
+  return array(
+    'administer couponsinc configuration' => array(
+      'title' => t('couponsinc configuration'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_node_info().
+ */
+function couponsinc_node_info() {
+  return array(
+    COUPONS_INC_NODE_TYPE => array(
+      'name'        => t('Coupons Inc'),
+      'base'        => 'node_content',
+      'description' => t('Used to create Coupons related to www.couponsinc.com'),
+      'has_title'   => '1',
+      'title_label' => t('Coupon Title'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu()
+ */
+function couponsinc_menu() {
+  $weight = 0;
+  $items = array();
+
+  $items['admin/config/couponsinc'] = array(
+    'title'            => 'Coupons Inc',
+    'description'      => 'General',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('couponsinc_general_settings_form'),
+    'access arguments' => array('administer couponsinc configuration'),
+    'file'             => 'inc/couponsinc.admin.inc',
+    'weight'           => $weight,
+  );
+
+  $items['admin/config/couponsinc/general'] = array(
+    'title'  => 'General Settings',
+    'type'   => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => $weight++,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter()
+ */
+function couponsinc_form_alter(&$form, &$form_state, $form_id) {
+  module_load_include('inc', 'couponsinc', 'inc/couponsinc.utils');
+  
+  switch ($form_id) {
+    case 'filter_admin_format_form':
+      // Disables the cache for the text formats
+      $form['#submit'][] = 'couponsinc_disable_text_formats_cache';
+      break;
+  }
+}
+
+/**
+ * Implements hook_node_insert()
+ */
+function couponsinc_node_insert($node) {  
+  if ($node->type == COUPONS_INC_NODE_TYPE) {
+    couponsinc_create_custom_filter_rule_by_node($node);
+    customfilter_cache_clear();
+  }
+}
+
+/**
+ * Implements hook_node_delete()
+ */
+function couponsinc_node_delete($node) {
+  if ($node->type == COUPONS_INC_NODE_TYPE) {
+    $pattern = couponsinc_generate_custom_filter_pattern($node->nid);
+    couponsinc_delete_custom_filter_rule_by_pattern($pattern);
+    customfilter_cache_clear();
+  }
+}
+
+/**
+ * Implements hook_node_update()
+ */
+function couponsinc_node_update($node) {
+  if ($node->type == COUPONS_INC_NODE_TYPE) {
+    $pattern = couponsinc_generate_custom_filter_pattern($node->nid);
+    couponsinc_delete_custom_filter_rule_by_pattern($pattern);
+    couponsinc_create_custom_filter_rule_by_node($node);
+    customfilter_cache_clear();
+  }
+}
+
+/**
+ * Create Coupons custom filter type
+ */
+function couponsinc_create_custom_filter_type() {
+  $fid = (integer) db_query("SELECT MAX(fid) FROM {customfilter_filter}")->fetchField() + 1;
+
+  $values = array(
+    'fid'         => $fid,
+    'type'        => COUPONS_INC_CUSTOM_FILTER_TYPE,
+    'name'        => 'Filter Coupons inc',
+    'cache'       => 1,
+    'description' => 'Filters for the link that will generate the Coupon',
+    'shorttip'    => '',
+    'longtip'     => '',
+  );
+
+  drupal_write_record('customfilter_filter', $values);
+}
+
+/**
+ * Implements hook_views_api().
+ * return data to import a views
+ */
+function couponsinc_views_api() {
+  return array(
+    'api' => 2.0,
+  );
+}
+
+/**
+ * Implements hook_views_default_views().
+ * Import a views
+ */
+function couponsinc_views_default_views() {
+  module_load_include('inc', 'couponsinc', 'inc/couponsinc.views');
+
+  $couponsinc_view = couponsinc_get_views_definition();
+  $views[$couponsinc_view->name] = $couponsinc_view;
+
+  return $views;
+}

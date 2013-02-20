@@ -1,0 +1,5 @@
+name = Related Content
+description = Shows the related content based on terms.
+package = pfizer
+core = 7.x
+version = 7.x.0.3

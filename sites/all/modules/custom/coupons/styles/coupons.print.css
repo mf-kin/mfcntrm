@@ -1,0 +1,26 @@
+@page {
+  margin: 10mm;
+}
+
+html,
+body,
+div.coupon-image-code {
+  margin: 0;
+  padding: 0;
+}
+
+div.coupon-image-code {
+  border: 2px solid #000;
+}
+
+div.coupon-image-code,
+div.coupon-image-code img {
+  width: 99% !important;
+  height: auto;
+}
+
+div.coupon-image-code.landscape,
+div.coupon-image-code.landscape img {
+  width: 197px;
+  height: 383px;
+}

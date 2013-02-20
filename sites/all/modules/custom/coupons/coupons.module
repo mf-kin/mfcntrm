@@ -1,0 +1,277 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * This module implements the Coupon's tasks
+ */
+
+define('CONTENT_TYPE_COUPON', 'coupon');
+define('PRINT_COUPON_DEFAULT_YES', 'yes');
+
+/**
+ * @see coupons.form.inc coupon_email_updates_form()
+ * Coupon node argument position passed to drupal_get_form().
+ */
+define('COUPON_WEBFORM_ARG_POSITION', 4);
+
+/**
+ * Implements hook_node_info()
+ */
+function coupons_node_info() {
+  return array(
+    'coupon' => array(
+      'name' => t('Coupon'),
+      'base' => 'node_content',
+      'has_title' => TRUE,
+      'title_label' => t('Coupon title'),
+      'description' => t('Coupon information.'),
+    )
+  );
+}
+
+/**
+ * Implements hook_menu()
+ */
+function coupons_menu() {
+  $items['admin/config/coupons'] = array(
+    'title'             => 'Coupons settings',
+    'description'       => 'Settings for coupons module',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('coupons_admin_config'),
+    'access arguments'  => array('administer site configuration'),
+    'type'              => MENU_NORMAL_ITEM,
+    'file'              => 'coupons.admin.inc',
+  );
+
+  $items['coupon-image/%node'] = array(
+    'title'             => 'Coupons images',
+    'description'       => 'Generate coupon image',
+    'page callback'     => 'coupons_generate_image',
+    'page arguments'    => array(1),
+    'access arguments'  => array('generate coupon image'),
+    'type'              => MENU_CALLBACK,
+    'file'              => 'coupons.image.inc',
+  );
+
+  $items['generate-coupon/%node'] = array(
+    'title'             => 'Generate Coupons',
+    'description'       => 'Generate coupon',
+    'page callback'     => 'coupons_generate_coupon',
+    'page arguments'    => array(1),
+    'access arguments'  => array('generate coupon image'),
+    'type'              => MENU_CALLBACK,
+    'file'              => 'coupons.image.inc',
+    'delivery callback' => 'coupons_iframe_content',
+  );
+
+  $items[variable_get('coupons_email_updates_url', 'email-updates') . '/%coupon_id'] = array(
+    'title'             => variable_get('coupons_email_updates_title', 'Sign Up for Our Email Updates'),
+    'page callback'     => 'coupon_email_updates_form',
+    'page arguments'    => array(_coupon_get_coupon_id_position_in_url()),  
+    'access arguments'  => array('access content'),
+    'file'              => 'coupons.form.inc',
+  );
+
+  return $items;
+}
+
+function _coupon_get_coupon_id_position_in_url() {
+  return substr_count(variable_get('coupons_email_updates_url', 'email-updates'), '/') + 1;
+}
+
+/**
+ * Load the coupon node object
+ */
+function coupon_id_load($coupon_id) {
+  $coupon_node = node_load($coupon_id);
+  if ($coupon_node != FALSE) {
+    if ($coupon_node->type != 'coupon') {
+      $coupon_node = FALSE;
+    }
+    elseif (_coupon_is_valid($coupon_node) == FALSE ) {
+      $coupon_node = FALSE;
+    }
+  }
+
+  return $coupon_node;
+}
+
+/**
+ * Implements hook_form_alter()
+ */
+function coupons_form_alter(&$form, &$form_state, $form_id) {
+  $webform_id = variable_get('coupon_sign_up_form_id');
+  if (!empty($webform_id) && $form_id == 'webform_client_form_' . $webform_id) {
+  
+    $coupon_node = NULL;
+    if (isset($form_state['build_info']['args'][COUPON_WEBFORM_ARG_POSITION]->nid)) {
+      $coupon_node = $form_state['build_info']['args'][COUPON_WEBFORM_ARG_POSITION];
+    }
+    else {
+      // avoid submissions without an associated coupon
+      drupal_not_found();
+      exit;
+    }
+
+    $form['coupon_node'] = array('#type' => 'value', '#value' => $coupon_node);
+
+    $form['#id'] = 'webform-form-coupon-sign-up';
+    $form['#theme'] = array('webform_form_coupon_sign_up');
+    $form['#action'] = base_path() . variable_get('coupons_email_updates_url', 'email-updates') . '/' . $coupon_node->nid;
+    
+    module_load_include('inc', 'coupons', 'coupons.form');
+    $form['#submit'][] = 'coupons_submit_redirect';
+
+    // Insert a function to create timestamp on submit of the webform
+    module_load_include('inc', 'coupons', 'coupons.code');
+    array_unshift($form['#submit'], 'coupons_submit_generate_timestamp');
+    array_unshift($form['#submit'], '_coupon_fill_hidden_form_fields');
+
+    //Add Header and footer content set in admin/config/coupons on form structure
+    $form['coupon_addtional_content']['header'] = array(
+      '#type' => 'item',
+      '#markup' => variable_get('coupons_header_email_updates_page', ''),
+    );
+
+    $form['coupon_addtional_content']['bottom'] = array(
+      '#type' => 'item',
+      '#markup' => variable_get('coupons_bottom_email_updates_page', ''),
+    );
+
+    // Populate Field DOB Year
+    //Based on the current year we get the first year going back 100 years.
+    if (isset($form['submitted']['field_dob_year'])) {
+      $current_year = date('Y');
+      $first_year = $current_year - 100;
+      $years = array('' => 'YYYY');
+      
+      for ($i = $current_year; $i >= $first_year; $i--) {
+        $years[$i] = $i;
+      }
+      
+      $form['submitted']['field_dob_year']['#options'] = $years;
+    }
+    
+    //Populate Campaign ID with the parameter that has been passed through the querystring
+    //Since this _alter function is called twice (before rendering the form and before the submit function), we can't
+    //set a default value for the field on the line below, because the $_GET variable will be only set the first time
+    //this function is called (before rendering the form)
+    $form['field_coupon_campaign_id_overriden'] = array('#type' => 'hidden');
+    if (isset($_GET['src'])) {
+      $form['field_coupon_campaign_id_overriden']['#value'] = check_plain(strip_tags($_GET['src']));
+    }
+   
+  }
+}
+
+/**
+ * Implements hook_node_view()
+ */
+function coupons_node_view($node, $view_mode, $langcode) {
+  $menu_object = menu_get_object();
+  if ($node->type === 'coupon' && $menu_object->nid == $node->nid) {    
+    module_load_include('inc', 'coupons', 'coupons.code');
+
+    $coupon_code = coupons_get_coupon_code_from_url();
+
+    global $user;
+    $is_admin = coupons_is_user_admin($user);        
+    if (!$is_admin) {      
+      coupons_redirect_to_coupon_form_on_invalid_coupon_code($coupon_code, $node);
+    }
+    
+    $node->generation_path = 'generate-coupon/'. $node->nid .'/'. coupons_encode_coupon_code($coupon_code);    
+    
+    // Add Print Functionality and css for screen
+    drupal_add_js(drupal_get_path('module', 'coupons') . '/scripts/coupons.print.js');
+    drupal_add_css(drupal_get_path('module', 'coupons') . '/styles/coupons.page.css', array('media' => 'screen'));    
+  }
+}
+
+
+/**
+ * Implements hook_cron()
+ */
+function coupons_cron() {
+  module_load_include('inc', 'coupons', 'coupons.admin');
+
+  $coupons = coupons_get_items_close_to_expiration_date();
+  if (!empty($coupons)) {
+    coupons_send_mail($coupons);
+  }
+}
+
+/*
+ * Implementation of hook_permission
+ */
+function coupons_permission() {
+  return array(
+    'generate coupon image' => array(
+      'title' => t('Generate Coupon Image'),
+      'description' => t('Generate the image of the coupon, with code and expiration date.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme()
+ */
+function coupons_theme() {
+  return array(
+    'webform_form_coupon_sign_up'  => array(
+      'render element' => 'form',
+      'template' => 'webform_form_coupon_sign_up',
+      'path'  => drupal_get_path('module', 'coupons') . '/theme/',
+    ),
+    'coupon_image' => array(
+      'variables' => array('image_src' => NULL),
+      'template' => 'coupon_image',
+      'path'  => drupal_get_path('module', 'coupons') . '/theme/',
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme_registry_alter()
+**/
+function coupons_theme_registry_alter(&$theme_registry) {
+  $mod_path = drupal_get_path('module', 'coupons') . '/theme';
+  $theme_registry_copy = $theme_registry;
+  _theme_process_registry($theme_registry_copy, 'phptemplate', 'theme_engine', NULL, $mod_path);
+  $theme_registry += array_diff_key($theme_registry_copy, $theme_registry);
+  
+  $hooks = array('node');
+  foreach ($hooks as $h) {
+    _coupons_insert_after_first_element($theme_registry[$h]['theme paths'], $mod_path);
+  }
+}
+
+/**
+ * Helper function for re-ordering arrays (needed by theme_registry_alter)
+*/
+function _coupons_insert_after_first_element(&$a, $element) {
+  if (is_array($a)) {
+    $first_element = array_shift($a);
+    array_unshift($a, $first_element, $element);
+  }
+}
+
+/*
+* Implementations of hook_init
+* Add coupon form url to Drupal Settings Js
+*/
+function coupons_init() {
+  $coupon_info = array('form_url' => variable_get('coupons_email_updates_url', ''));
+  drupal_add_js(array('coupon' => $coupon_info), 'setting');
+}
+
+/**
+ * Validate if the cupon is valid
+ */
+function _coupon_is_valid($coupon_code) {
+  $coupon_start_date = date_create($coupon_code->field_coupon_start_date[$coupon_code->language][0]['value']);
+  $coupon_end_date = date_create($coupon_code->field_coupon_end_date[$coupon_code->language][0]['value']);
+  $today = date_create('now');
+  return $today >= $coupon_start_date && $today <= $coupon_end_date;
+}

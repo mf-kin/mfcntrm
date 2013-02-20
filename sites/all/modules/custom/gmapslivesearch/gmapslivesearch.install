@@ -1,0 +1,54 @@
+<?php
+// $Id$ 
+
+/**
+ * @file 
+ */
+ 
+/**
+* Implements hook_install()
+*/
+function gmapslivesearch_install() {
+  // Check to see if gmapslivesearch_stores_options field exists.
+  $field = field_info_field('gmapslivesearch_stores_options');
+  // if the gmapslivesearch_stores_options field does not exist then create it
+  if (empty($field)) {
+    $field = array(
+      'field_name' => 'gmapslivesearch_stores_options',
+      'type'  => 'list_text',
+      'entity_types' => array('node'),
+      'translatable' => TRUE,
+      'cardinality'  => FIELD_CARDINALITY_UNLIMITED,
+    );
+    
+    $field = field_create_field($field);
+  }
+  
+}
+
+/**
+ * Implementation of hook_uninstall() 
+ */
+function gmapslivesearch_uninstall() {
+  watchdog("Gmapslivesearch", "Uninstalling module and deleting fields and variables");
+  
+  db_delete('variable')->condition('name', 'gmapslivesearch_%', 'LIKE')->execute();
+  
+  $types = node_type_get_types();
+  foreach($types as $type) {
+    gmapslivesearch_delete_stores($type);
+  }
+  
+  $field = field_info_field('gmapslivesearch_stores_options');
+  if ($field) {
+    field_delete_field('gmapslivesearch_stores_options');
+  }
+}
+
+function gmapslivesearch_delete_stores($type) {
+  $instance = field_info_instance('node', 'gmapslivesearch_stores_options', $type->type);
+  
+  if ($instance) {
+    field_delete_instance($instance);
+  }
+}

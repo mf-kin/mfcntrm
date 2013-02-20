@@ -1,0 +1,87 @@
+/* EXIT LINK */
+
+/* background */
+#extlink-overlay-background {
+  width: 100%;
+  min-height: 100%;
+  
+  position: fixed;
+  top:0;
+  left:0;
+  z-index:9999;
+  
+  background-color: #333333;
+  opacity:0.55;
+  -moz-opacity: 0.55;
+  filter: alpha(opacity=55);
+}
+* html #extlink-overlay-background {
+  height: 100%;
+  position: absolute;
+} 
+ 
+  /* window */
+  #extlink-message{
+    width: 700px;
+    height: 240px;
+    
+    position: fixed;
+    top:50%;
+    left:50%;
+    z-index:99999;
+    
+    margin-top: -120px;
+    margin-left:-350px;
+    
+    background-color: #ffffff;
+  }
+  * html #extlink-message {
+    position: absolute;
+    margin-top: expression(0 - parseInt(this.offsetHeight / 2) + (TBWindowMargin = document.documentElement && document.documentElement.scrollTop || document.body.scrollTop) + 'px');
+  }
+  
+/* content */
+
+  /*#################################################################*/
+  
+  #extlink-message-content h1{
+    color: #000; 
+    font-size: 20px; 
+    font-family: Arial,Helvetica,sans-serif;
+    margin-bottom: 15px; 
+  }
+  
+  #extlink-message-content p{
+    color: #000; 
+    font-size: 12px; 
+    font-family: Arial,Helvetica,sans-serif;
+    line-height: 15px;
+    margin-bottom: 10px; 
+  }
+  
+  #extlink-message-content a{
+      color: #025ABC;
+      text-decoration: underline;
+    }
+  
+  #extlink-message-content a:hover{
+      text-decoration: none;
+  }
+  
+  /*#################################################################*/
+
+/* close button */
+#extlink-close-button{
+  width: 20px;
+  height: 20px; 
+  cursor: pointer;
+}
+
+#extlink-cancel-button {
+  display:block;
+  float:left;
+  width:60px;
+  line-height:50px;
+  text-align:center;
+  cursor: pointer;
+}

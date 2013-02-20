@@ -1,0 +1,68 @@
+<?php
+/**
+ * @file
+ * Mobile Offers Module
+ */
+
+// Prefix for the variables
+define('MOBILE_OFFERS_PREFIX', "mobile_offers_");
+
+/**
+ * Implementation of hook_init
+ */
+function mobile_offers_init() {
+  module_load_include('inc', 'mobile_offers', 'inc/mobile_offers.common');
+}
+
+/**
+ * Implementation of hook_menu
+ */
+function mobile_offers_menu() {
+  $items = array();
+
+  // Admin configuration
+  $items['admin/config/mobile-offers'] = array(
+    'title' => 'Mobile Offers configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mobile_offers_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'inc/mobile_offers.admin.inc'
+  );
+  
+  $items['admin/config/mobile-offers/general'] = array(
+    'title'             => 'General Configuration',
+    'description'       => 'Set general configuration for the module',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/config/mobile-offers/products-aliases'] = array(
+    'title' => 'Products Aliases',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mobile_offers_products_aliases_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/mobile_offers.admin.inc'
+  );
+
+  // Offers form page
+  $items['offers'] = array(
+    'title' => variable_get(MOBILE_OFFERS_PREFIX . 'page_title', 'Offers'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mobile_offers_form'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'inc/mobile_offers.forms.inc'
+  );
+  
+  // Thank you page (if necessary)
+  if(variable_get(MOBILE_OFFERS_PREFIX . 'create_thank_you_page', '') == 1) {
+    $items['offers-thank-you'] = array(
+      'title' => variable_get(MOBILE_OFFERS_PREFIX . 'thank_you_page_title', 'Thank You'),
+      'page callback' => 'variable_get',
+      'page arguments' => array(MOBILE_OFFERS_PREFIX . 'thank_you_page_content', ''),
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+  return $items;
+}

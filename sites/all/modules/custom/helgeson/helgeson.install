@@ -1,0 +1,61 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Helgeson module.
+ */
+
+/**
+ * Implements hook_install()
+ */
+function helgeson_install() {
+  helgeson_set_variables();
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function helgeson_uninstall() {
+  helgeson_delete_variables();
+}
+
+/**
+ * Set default helgeson variables
+ */
+function helgeson_set_variables() {
+  watchdog("Helgeson", "Initializing module variables");
+
+  $variables = helgeson_get_variables_definition();
+
+  foreach ($variables as $name => $value) {
+    variable_set($name, $value);
+  }
+}
+
+/**
+ * Delete helgeson variables
+ */
+function helgeson_delete_variables() {
+  watchdog("Helgeson", "Deleting module variables");
+
+  db_delete('variable')->condition('name', 'helgeson_%', 'LIKE')->execute();
+}
+
+/**
+ * Get default variables definitions
+ */
+function helgeson_get_variables_definition() {
+  $variables = array(
+    'helgeson_csv_field_delimiter'        => ';',
+    'helgeson_csv_include_column_headers' => 1,
+    'helgeson_delete_flatfile'            => 1,
+    'helgeson_integration_enabled'        => 0,
+    'helgeson_pgp_key_name'               => 'helgeson/HelgesonEnterprisesPublicKey.asc',
+    'helgeson_repository_files'           => 'helgeson/inbound',
+    'helgeson_run_cron_hour'              => '02',
+    'helgeson_sftp_address'               => 'ftps.helgesonent.com',
+  );
+
+  return $variables;
+}

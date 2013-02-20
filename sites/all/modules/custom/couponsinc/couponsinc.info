@@ -1,0 +1,6 @@
+name = CouponsInc
+description = Enable integration with www.couponsinc.com vendor for links.
+package = pfizer
+version = "7.x-2.0"
+core = 7.x
+dependencies[] = customfilter

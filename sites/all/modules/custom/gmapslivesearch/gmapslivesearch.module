@@ -1,0 +1,370 @@
+<?php
+// $Id$ 
+
+/*** FORM FIELD NAMES ***/
+define('GMAPSLIVESEARCH_ERROR_MESSAGES', 'gmapslivesearch_error_messages');
+define('GMAPSLIVESEARCH_ERROR_MESSAGES_MOBILE', 'gmapslivesearch_error_messages_mobile');
+define('GMAPSLIVESEARCH_ERROR_MESSAGE_ADDRESS_FIELD', 'gmapslivesearch_error_message_address_field');
+define('GMAPSLIVESEARCH_ERROR_MESSAGE_ADDRESS_FIELD_MOBILE', 'gmapslivesearch_error_message_address_field_mobile');
+define('GMAPSLIVESEARCH_JQTRANSFORM_OPTION', 'gmapslivesearch_jqtransform_option');
+define('GMAPSLIVESEARCH_FIELD_STORES_SEARCH', 'gmapslivesearch_field_stores_search');
+define('GMAPSLIVESEARCH_FIELDSET_GOOGLEAPIKEY', 'gmapslivesearch_fieldset_googleapikey');
+define('GMAPSLIVESEARCH_FIELD_GOOGLEAPIKEY', 'gmapslivesearch_field_googleapikey');
+define('GMAPSLIVESEARCH_FIELD_SEARCHSTRING', 'gmapslivesearch_field_searchstring');
+define('GMAPSLIVESEARCH_FIELD_REMOVE_BUY_NOW_BUTTON', 'gmapslivesearch_field_remove_buy_now_button');
+define('GMAPSLIVESEARCH_FIELD_MILESSEARCH_WITHIN', 'gmapslivesearch_field_milessearch_within');
+define('GMAPSLIVESEARCH_FIELD_MILESSEARCH_WITHIN_ENABLED', 'gmapslivesearch_field_milessearch_within_enabled');
+define('GMAPSLIVESEARCH_FIELD_ADDRESS_TO_SEARCH', 'gmapslivesearch_field_address_to_search');
+define('GMAPSLIVESEARCH_FIELD_GOTO_ONLINE_STORE_BTN', 'gmapslivesearch_field_goto_online_store_btn');
+define('GMAPSLIVESEARCH_FIELD_ENABLE_DEFAULT_RESULT', 'gmapslivesearch_enable_default_result');
+define('GMAPSLIVESEARCH_FIELD_ENABLE_DEFAULT_RESULT_MOBILE', 'gmapslivesearch_enable_default_result_mobile');
+define('GMAPSLIVESEARCH_FIELD_DEFAULT_MAP_RESULT_LATITUDE', 'gmapslivesearch_default_map_result_latitude');
+define('GMAPSLIVESEARCH_FIELD_DEFAULT_MAP_RESULT_LATITUDE_MOBILE', 'gmapslivesearch_default_map_result_latitude_mobile');
+define('GMAPSLIVESEARCH_FIELD_DEFAULT_MAP_RESULT_LONGITUDE', 'gmapslivesearch_default_map_result_longitude');
+define('GMAPSLIVESEARCH_FIELD_DEFAULT_MAP_RESULT_LONGITUDE_MOBILE', 'gmapslivesearch_default_map_result_longitude_mobile');
+define('GMAPSLIVESEARCH_FIELD_DEFAULT_MAP_RESULT_ZOOM', 'gmapslivesearch_default_map_result_zoom');
+define('GMAPSLIVESEARCH_FIELD_DEFAULT_MAP_RESULT_ZOOM_MOBILE', 'gmapslivesearch_default_map_result_zoom_mobile');
+define('GMAPSLIVESEARCH_FIELDSET_DEFAULT_MILE_RADIUS', 'gmapslivesearch_default_mile_radius');
+define('GMAPSLIVESEARCH_FIELDSET_DEFAULT_MILE_RADIUS_MOBILE', 'gmapslivesearch_default_mile_radius_mobile');
+define('GMAPSLIVESEARCH_FIELDSET_DEFAULT_RESULT', 'gmapslivesearch_default_result');
+define('GMAPSLIVESEARCH_FIELDSET_DEFAULT_RESULT_MOBILE', 'gmapslivesearch_default_result_mobile');
+define('GMAPSLIVESEARCH_FIELDSET_MILES_SEARCH', 'gmapslivesearch_miles_search_fieldset');
+define('GMAPSLIVESEARCH_FIELDSET_MAPS_BULLETS', 'gmapslivesearch_maps_bullets');
+define('GMAPSLIVESEARCH_FIELD_ADDRESS_TO_SEARCH_FIND_ONLINE', 'gmapslivesearch_field_address_to_search_find_online');
+define('GMAPSLIVESEARCH_FIELD_STORES_SEARCH_FIND_ONLINE', 'gmapslivesearch_field_stores_search_find_online');
+define('GMAPSLIVESEARCH_FIELD_FIND_STORE_BTN', 'gmapslivesearch_field_find_store_btn');
+define('GMAPSLIVESEARCH_FIELD_BUY_ONLINE_BTN', 'gmapslivesearch_field_buy_online_btn');
+define('GMAPSLIVESEARCH_FIELD_BUY_ONLINE_BTN_PAGE', 'gmapslivesearch_field_buy_online_btn_page');
+define('GMAPSLIVESEARCH_FIELD_GOTO_ONLINE_STORE_BTN_FIND_ONLINE', 'gmapslivesearch_field_goto_online_store_btn_find_online');
+define('GMAPSLIVESEARCH_FIELDSET_BUY_ONLINE_BLOCK', 'gmapslivesearch_buy_online_block');
+define('GMAPSLIVESEARCH_FIELDSET_BUY_ONLINE_PAGE', 'gmapslivesearch_buy_online_page');
+define('GMAPSLIVESEARCH_FIELDSET_BUY_ONLINE_PAGE_MOBILE', 'gmapslivesearch_buy_online_page_mobile');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_ADDRESS_SEARCH_DESC', 'gmapslivesearch_buy_online_address_search_desc');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_STORE_SEARCH_DESC', 'gmapslivesearch_buy_online_store_search_desc');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_STORE_ADDRESS_FIELD_LABEL', 'gmapslivesearch_buy_online_store_address_field_label');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_STORE_SEARCH_FIELD_LABEL', 'gmapslivesearch_buy_online_store_search_field_label');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_ADDRESS_SEARCH_DESC', 'gmapslivesearch_where_to_buy_page_address_search_desc');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_STORE_SEARCH_DESC', 'gmapslivesearch_where_to_buy_page_store_search_desc');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE_TEXT', 'gmapslivesearch_where_to_buy_page_title');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_SUBTITLE_TEXT', 'gmapslivesearch_where_to_buy_page_subtitle');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_ADDRESS_FIELD_LABEL', 'gmapslivesearch_where_to_buy_page_address_field_label');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_STORE_FIELD_LABEL', 'gmapslivesearch_where_to_buy_page_store_field_label');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_RESULTS_SCROLL_JS_DRAG_HEIGHT', 'gmapslivesearch_where_to_buy_page_results_scroll_js_drag_height');
+define('GMAPSLIVESEARCH_FIELDSET_BUY_ONLINE_SELECT', 'gmapslivesearch_buy_online_select');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_ADDRESS_SEARCH_LABEL', 'gmapslivesearch_buy_online_address_search_label');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_ADDRESS_SEARCH_LABEL_MOBILE', 'gmapslivesearch_buy_online_address_search_label_mobile');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_STORE_SEARCH_LABEL', 'gmapslivesearch_buy_online_store_search_label');
+define('GMAPSLIVESEARCH_FIELDSET_MAPS_GREAT_DISTANCE', 'gmapslivesearch_great_distance');
+define('GMAPSLIVESEARCH_FIELDSET_MAPS_GREAT_DISTANCE_VALUE', 'gmapslivesearch_great_distance_value');
+define('GMAPSLIVESEARCH_FIELDSET_MAPS_GREAT_DISTANCE_MESSAGE', 'gmapslivesearch_great_distance_message');
+define('GMAPSLIVESEARCH_FIELDSET_ENABLE_DISTANCE_MSG','gmapslivesearch_enable_distance_message');
+/*** FORM TYPE ***/
+define('GMAPSLIVESEARCH_FORM_SEARCH_BOX_BUY_NOW_PAGE', 'gmapslivesearch_form_search_box_buy_now_page');
+define('GMAPSLIVESEARCH_FORM_FIND_ONLINE', 'gmapslivesearch_form_find_online');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE', 'gmapslivesearch_field_buy_now_page_title');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE_MOBILE', 'gmapslivesearch_field_buy_now_page_title_mobile');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH', 'gmapslivesearch_field_buy_now_page_path');
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH_MOBILE', 'gmapslivesearch_field_buy_now_page_path_mobile');
+define('GMAPSLIVESEARCH_FORM_BUY_NOW_PAGE_PATH', variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH, ''));
+define('GMAPSLIVESEARCH_FORM_BUY_NOW_PAGE_PATH_MOBILE', variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH_MOBILE, GMAPSLIVESEARCH_FORM_BUY_NOW_PAGE_PATH));
+define('GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_SHOW_SHARE_MOBILE', 'gmapslivesearch_field_buy_now_page_show_share_mobile');
+
+
+
+
+
+define('GMAPSLIVESEARCH_GOOGLE_SEARCH_TOTAL_RESULTS_RETURNED', 8);
+define('GMAPSLIVESEARCH_MAP_BULLETS_IMAGE_PREFIX', 'gmapslivesearch_map_bullet_');
+define('GMAPSLIVESEARCH_MAP_BULLETS_IMAGE_FOLDER', 'images/gmapslivesearch_bullets/');
+
+define('GMAPSLIVESEARCH_DEFAULT_MILESEARCH_VALUE', variable_get(GMAPSLIVESEARCH_FIELDSET_DEFAULT_MILE_RADIUS,1) );
+define('GMAPSLIVESEARCH_FIELD_STORES_CONTENT_TYPE', 'gmapslivesearch_field_stores_content_type');
+
+define('GMAPSLIVESEARCH_SHOW_ERROR_INLINE_FIND_ONLINE_BLOCK', 'gmapslivesearch_show_error_inline_find_online_block');
+define('GMAPSLIVESEARCH_FIELD_RETINA_IMAGE_WIDTH', 'gmapslivesearch_field_retina_image_width');
+define('GMAPSLIVESEARCH_FIELD_RETINA_IMAGE_HEIGHT', 'gmapslivesearch_field_retina_image_height');
+
+/**
+ * @file 
+ */
+
+/**
+ * Implementation of hook_init()
+ */
+function gmapslivesearch_init() {
+  gmapslivesearch_load_js();
+}
+
+function gmapslivesearch_load_js() {
+  $device_type = gmapslivesearch_return_device_type();    
+
+  if ($device_type == 'mobile') {
+    drupal_add_js(drupal_get_path('module', 'gmapslivesearch') . '/scripts/mobile/gmapslivesearch.mobile.core.js');
+    drupal_add_js(drupal_get_path('module', 'gmapslivesearch') . '/scripts/mobile/gmapslivesearch.mobile.js');
+  }
+  else {
+    drupal_add_js(drupal_get_path('module', 'gmapslivesearch') . '/scripts/gmapslivesearch.core.js');
+    drupal_add_js(drupal_get_path('module', 'gmapslivesearch') . '/scripts/gmapslivesearch.js');
+    
+    $apply_jqTransform = variable_get(GMAPSLIVESEARCH_JQTRANSFORM_OPTION, 0);
+    drupal_add_js(array('gmapslivesearh_apply_jqtranform' => $apply_jqTransform), 'setting');
+  
+    if ($apply_jqTransform == 1) {
+      drupal_add_js(drupal_get_path('module', 'gmapslivesearch') . '/scripts/jquery.jqtransform.js');
+    }
+    
+  }
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function gmapslivesearch_menu() {
+  $mobile_type = gmapslivesearch_return_device_type();
+
+  $items['admin/config/gmapslivesearch'] = array( 
+    'title'             => 'Google maps live search settings',
+    'description'       => 'Set general configuration for the module',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('gmapslivesearch_general_config'),
+    'access arguments'  => array('administer site configuration'),    
+    'file'              => 'gmapslivesearch.admin.inc',
+    'weight'            => 0,
+  );
+
+  if (module_exists('mobile_tools')) {
+    $items['admin/config/gmapslivesearch/general_mobile'] = array( 
+        'title'             => 'Mobile General Configuration',
+        'description'       => 'Set general configuration for the mobile devices',  
+        'page callback'     => 'drupal_get_form',
+        'page arguments'    => array('gmapslivesearch_mobile_config'),
+        'access arguments'  => array('administer site configuration'),    
+        'file'              => 'gmapslivesearch.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 1,  
+    );
+    $items[GMAPSLIVESEARCH_FORM_BUY_NOW_PAGE_PATH_MOBILE] = array(
+          'title'             => variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE_MOBILE, variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE, 'Buy Now')),
+          'description'       => 'Generates buy now page',
+          'page callback'     => 'gmapslivesearch_buy_now_page',
+          'access arguments'  => array('access content'),
+          'file'              => 'gmapslivesearch.buynow.inc',
+          'type'              => MENU_CALLBACK,
+    );
+  }
+  
+  $items['admin/config/gmapslivesearch/general'] = array(
+    'title'             => 'General Configuration',
+    'description'       => 'Set general configuration for the module',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  $items['admin/config/gmapslivesearch/stores_configuration'] = array( 
+    'title'             => 'Stores Configuration',
+    'description'       => 'Set in here available stores to be searched',  
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('gmapslivesearch_stores_config'),
+    'access arguments'  => array('administer site configuration'),    
+    'file'              => 'gmapslivesearch.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,  
+  );
+  
+  $items['admin/config/gmapslivesearch/content_configuration'] = array( 
+    'title'             => 'Layout & Content Configuration',
+    'description'       => 'Set in here layout and content details',  
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('gmapslivesearch_content_config'),
+    'access arguments'  => array('administer site configuration'),    
+    'file'              => 'gmapslivesearch.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,  
+  );
+  
+  if (module_exists('i18n_variable')) {
+    
+    $lang_list = i18n_language_list();
+    foreach ($lang_list as $lang_code => $lang_name) {
+      $items[i18n_variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH, $lang_code)] = array(
+        'title'             => i18n_variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE,$lang_code),
+        'description'       => 'Generates buy now page',
+        'page callback'     => 'gmapslivesearch_buy_now_page',
+        'access arguments'  => array('access content'),
+        'file'              => 'gmapslivesearch.buynow.inc',
+        'type'              => MENU_CALLBACK,
+      );  
+    }
+  }
+  else {
+    $items[variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH, '')] = array(
+      'title'             => variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_TITLE, 'Buy Now'),
+      'description'       => 'Generates buy now page',
+      'page callback'     => 'gmapslivesearch_buy_now_page',
+      'access arguments'  => array('access content'),
+      'file'              => 'gmapslivesearch.buynow.inc',
+      'type'              => MENU_CALLBACK,
+    );
+  }
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_block_info() 
+ */
+function gmapslivesearch_block_info() {
+  $blocks['gmapslivesearch_main_block']['info'] = t('Google maps live search - Main Block');
+  $blocks['gmapslivesearch_find_store']['info'] = t('Google maps live search - Find store and buy online');
+  $blocks['gmapslivesearch_find_store']['cache'] = DRUPAL_NO_CACHE;
+  return $blocks;
+}
+
+/**
+ * Implementation of hook_block_view()
+ */
+function gmapslivesearch_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'gmapslivesearch_main_block':
+      $block['content'] = gmapslivesearch_build_results_box();
+      break;
+    case 'gmapslivesearch_find_store':
+      module_load_include('inc', 'gmapslivesearch', 'gmapslivesearch.buynow');
+      $block['content'] = drupal_render(drupal_get_form('gmapslivesearch_find_online_form'));
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Build results box with maps and search returned resuls.
+ */
+function gmapslivesearch_build_results_box() {
+  gmapslivesearch_add_settings_to_js();
+  return theme('gmapslivesearch_main_block');
+}
+
+/**
+ * Build results box with default value of map
+ */
+function gmapslivesearch_build_default_map($enabled_default_result, $default_result_latitude, $default_result_longitude, $default_result_zoom) {
+  drupal_add_js(array('gmapslivesearch_enabled_default_result' => $enabled_default_result), 'setting');
+  drupal_add_js(array('gmapslivesearch_default_result_latitude' => $default_result_latitude), 'setting');
+  drupal_add_js(array('gmapslivesearch_default_result_longitude' => $default_result_longitude), 'setting');
+  drupal_add_js(array('gmapslivesearch_default_result_zoom' => $default_result_zoom), 'setting');
+  
+  drupal_add_js(array(GMAPSLIVESEARCH_FIELD_GOOGLEAPIKEY => variable_get(GMAPSLIVESEARCH_FIELD_GOOGLEAPIKEY)), 'setting');
+  return theme('gmapslivesearch_main_block');
+}
+
+/**
+ * Get settings for gmapslivesearch and load into JS.
+ */
+function gmapslivesearch_add_settings_to_js() {
+  module_load_include('inc', 'gmapslivesearch', 'gmapslivesearch.buynow');
+  $stores_to_search = _gmapslivesearch_get_stores_to_search();
+
+  $mobile_type = gmapslivesearch_return_device_type();
+  
+  $gmapslivesearch_js_settings = array(
+    GMAPSLIVESEARCH_FIELD_SEARCHSTRING => implode('|', $stores_to_search),
+    GMAPSLIVESEARCH_FIELD_GOOGLEAPIKEY => variable_get(GMAPSLIVESEARCH_FIELD_GOOGLEAPIKEY), 
+  );
+  
+  if (module_exists('mobile_tools')) {
+    if(variable_get('gmapslivesearch_field_retina_image_height') != '') {
+      drupal_add_js(array('gmapslivesearch_map_bullet_height' => variable_get('gmapslivesearch_field_retina_image_height')), 'setting');
+    }
+    if (variable_get('gmapslivesearch_field_retina_image_width') != ''){
+      drupal_add_js(array('gmapslivesearch_map_bullet_width' => variable_get('gmapslivesearch_field_retina_image_width')), 'setting');
+    }
+  }
+  
+  drupal_add_js(array('gmapslivesearch_results_scroll_js_drag_height' => variable_get('gmapslivesearch_where_to_buy_page_results_scroll_js_drag_height', 73)), 'setting');
+  
+  drupal_add_js(array('gmapslivesearch' => $gmapslivesearch_js_settings), 'setting');
+  drupal_add_js(drupal_get_path('module', 'gmapslivesearch') . '/scripts/jquery.jscrollpane.min.js');
+  drupal_add_js(array('gmapslivesearh_map_bullet_folder' => variable_get('file_public_path', 'sites/default/files') . '/' .
+      GMAPSLIVESEARCH_MAP_BULLETS_IMAGE_FOLDER), 'setting');
+  $first_image = variable_get(GMAPSLIVESEARCH_MAP_BULLETS_IMAGE_PREFIX .'1', NULL);
+  if ($first_image) {
+    preg_match('/(\.[a-zA-Z]*)?$/', $first_image, $matches);
+    drupal_add_js(array('gmapslivesearh_map_bullet_extension' => $matches[1]), 'setting');
+  }
+  
+  if ($mobile_type=='mobile') {
+    drupal_add_js(array('gmapslivesearch_show_share' => variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_SHOW_SHARE_MOBILE, FALSE)), 'setting');
+  }
+}
+
+
+/**
+ * Implementation of hook_theme()
+ */
+function gmapslivesearch_theme() {
+    return array(
+    'gmapslivesearch_main_block'  => array(
+      'path'  => drupal_get_path('module', 'gmapslivesearch') . '/theme/',  
+      'template'  => 'gmapslivesearch_main_block',  
+    ),
+    'gmapslivesearch_buynow_page' => array(
+      'variables' => array(
+        'search_box' => '', 
+        'results_box' => ''
+      ),
+      'path'  => drupal_get_path('module', 'gmapslivesearch') . '/theme/',  
+      'template'  => 'gmapslivesearch_buynow_page', 
+    ),
+    'gmapslivesearch_search_box_form'  => array(
+      'render element' => 'form',
+      'path'  => drupal_get_path('module', 'gmapslivesearch') . '/theme/',
+      'template' => 'gmapslivesearch_search_box_form',
+    ),
+    'gmapslivesearch_find_store_form'  => array(
+      'render element' => 'form',
+      'path' => drupal_get_path('module', 'gmapslivesearch') . '/theme/',
+      'template' => 'gmapslivesearch_find_store_form',  
+    )
+  );
+}
+
+/**
+ * Implements hook_communication_tools_print_alter()
+ */
+function gmapslivesearch_communication_tools_print_alter(&$block) {
+  if (isset($_SESSION['gmapslivesearch_has_results'])) {
+    if ($_GET['q'] == variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH, '') && $_SESSION['gmapslivesearch_has_results']) {
+      $block['#markup'] = '<a href="http://maps.google.com/maps?pw=2&q=" id="gmapslivesearch-printresults" class="print-btn">' . t('Print') . '</a>';
+      unset($_SESSION['gmapslivesearch_has_results']);
+    }
+    else if ($_GET['q'] == variable_get(GMAPSLIVESEARCH_FIELD_BUY_NOW_PAGE_PATH_MOBILE, '') && $_SESSION['gmapslivesearch_has_results']) {
+      $block['#markup'] = '<a href="http://maps.google.com/maps?pw=2&q=" id="gmapslivesearch-printresults" class="print-btn">' . t('Print') . '</a>';
+      unset($_SESSION['gmapslivesearch_has_results']);
+    }
+  }
+}
+
+function gmapslivesearch_return_device_type() {
+  $mobile_type = 'desktop';
+  if (module_exists('mobile_tools')) {
+    $device_type = mobile_tools_get_device();
+    $mobile_type = $device_type['type'];
+  }
+  return $mobile_type;
+}
+
+/**
+ * Implements hook_communication_tools_destination_alter()
+ */
+function gmapslivesearch_communication_tools_destination_alter(&$destination) {
+  $mobile_type = gmapslivesearch_return_device_type();
+  
+  if (isset($_POST['gmapslivesearch_field_address_to_search']) && $mobile_type == 'desktop') {
+    $buy_now_url = variable_get('gmapslivesearch_field_buy_now_page_path', '');
+    $destination = $buy_now_url . '?address=' . $_POST['gmapslivesearch_field_address_to_search'];
+  }
+  else if (isset($_POST['gmapslivesearch_field_address_to_search']) && $mobile_type == 'mobile') {
+    $buy_now_url = variable_get('gmapslivesearch_field_buy_now_page_path_mobile', '');
+    $destination = $buy_now_url . '?address=' . $_POST['gmapslivesearch_field_address_to_search'];
+  }
+}

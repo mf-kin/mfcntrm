@@ -1,0 +1,7 @@
+name = CouponsInc Register
+description = Provides a webform through which users are able to request CouponsInc coupons.
+core = 7.x
+package = pfizer
+version = "7.x-1.1"
+dependencies[] = couponsinc
+dependencies[] = webform

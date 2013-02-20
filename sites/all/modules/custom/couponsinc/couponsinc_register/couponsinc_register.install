@@ -1,0 +1,299 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for CouponsInc Register module.
+ */
+
+/**
+ * Implements hook_uninstall()
+ */
+function couponsinc_register_uninstall() {
+  node_delete(variable_get('couponsinc_register_webform_nid'));
+  couponsinc_register_delete_variables();
+}
+
+/**
+ * Delete all Drupal variables related to CouponsInc Register module
+ */
+function couponsinc_register_delete_variables() {
+  db_delete('variable')->condition('name', 'couponsinc_register_%', 'LIKE')->execute();
+}
+
+/**
+ *  Implements hook_install().
+ */
+function couponsinc_register_install() {
+  _couponsinc_register_create_webform();
+}
+
+/**
+ * Creates a webform node, through which the user can register to get a coupon.
+ */
+function _couponsinc_register_create_webform() {
+  $node = new stdClass();
+  $node->type = 'webform';
+  $node->title = 'CouponsInc Register form';
+  $node->language = LANGUAGE_NONE;
+  $node->body[$node->language][0]['format'] = 'full_html';
+  $node->body[$node->language][0]['value'] = '<p id="mandatory">* Mandatory</p>';
+  $node->status = 1;
+
+  node_object_prepare($node); // Set some default values.
+  $node = node_submit($node); // Prepare node for a submit
+  node_save($node);
+
+  variable_set('couponsinc_register_webform_nid', $node->nid);
+  module_load_include('inc', 'webform', 'includes/webform.components');
+  $weight = 0;
+  $created_webform_nid = $node->nid;
+  foreach (_couponsinc_register_get_webform_components() as $form_key => $component) {
+    $default_values = array(
+      'nid'    => $created_webform_nid,
+      'pid'    => 0,
+      'value'  => '',
+      'weight' => $weight++
+    );
+    webform_component_insert(array_merge($default_values, $component));
+  }
+}
+
+/**
+ * Get the definition for the CouponsInc Register webform fields.
+ *
+ * @return array
+ */
+function _couponsinc_register_get_webform_components() {
+  $components = array(
+    'first_name' => array(
+      'form_key'  => 'first_name',
+      'name'      => 'First Name',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'last_name' => array(
+      'form_key'  => 'last_name',
+      'name'      => 'Last Name',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'email' => array(
+      'form_key'  => 'email',
+      'name'      => 'Email',
+      'type'      => 'email',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'address_line_1' => array(
+      'form_key'  => 'address_line_1',
+      'name'      => 'Address Line 1',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'address_line_2' => array(
+      'form_key'  => 'address_line_2',
+      'name'      => 'Address Line 2',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),
+    'city' => array(
+      'form_key'  => 'city',
+      'name'      => 'City',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_state' => array(
+      'form_key'  => 'field_state',
+      'name'      => 'State',
+      'type'      => 'select',
+      'extra'     => array(
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'zip' => array(
+      'form_key'  => 'zip',
+      'name'      => 'Zip',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 5,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 5,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => TRUE,
+    ),
+    'field_dob_month' => array(
+      'form_key'  => 'field_dob_month',
+      'name'      => 'DOB',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => "01|01\n" .
+        "02|02\n" .
+        "03|03\n" .
+        "04|04\n" .
+        "05|05\n" .
+        "06|06\n" .
+        "07|07\n" .
+        "08|08\n" .
+        "09|09\n" .
+        "10|10\n" .
+        "11|11\n" .
+        "12|12\n",
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_dob_year' => array(
+      'form_key'  => 'field_dob_year',
+      'name'      => 'DOB Year',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'year|Year',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'gender' => array(
+      'form_key'  => 'gender',
+      'name'      => 'Gender',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => "M|Male\n" .
+        "F|Female\n",
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'children_under_18_in_household' => array(
+      'form_key'  => 'children_under_18_in_household',
+      'name'      => 'Are there children under age 18 in your household?',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => "Yes|YES\n" .
+        "No|NO\n",
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'choose_what_information_you_receive' => array(
+      'form_key'  => 'choose_what_information_you_receive',
+      'name'      => 'Choose what information you receive',
+      'type'      => 'markup',
+      'value'     => '<h2 id="choose_information">Choose what information your receive</h2>',
+      'extra'     => array(
+        'format' => 'full_html',
+      ),
+    ),
+    'narrow_consent' => array(
+      'form_key'  => 'narrow_consent',
+      'name'      => 'Narrow Consent',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'NI|Yes, I would like to receive periodic promotions, special offers and timely updates or information from ' . variable_get('site_name', '[SITE-NAME]<sup>&reg;</sup>') . '. I agree to the <a title="Privacy Policy" href="http://www.pfizer.com/general/privacy_policy_transitioned.jsp" >Privacy Policy</a>.',
+        'multiple' => TRUE,
+        'title_display' => 'none',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),
+    'broad_consent' => array(
+      'form_key'  => 'broad_consent',
+      'name'      => 'Broad Consent',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'BI|Yes, I would like to receive periodic promotions, special offers and timely updates or information from Pfizer Consumer Healthcare, the makers of  Centrum<sup>&reg;</sup>, Advil<sup>&reg;</sup>, and other leading brands. I agree to the <a href="http://www.pfizer.com/general/privacy_policy_transitioned.jsp" title="Privacy Policy">Privacy Policy</a>.',
+        'multiple' => TRUE,
+        'title_display' => 'none',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),
+    'offer_id' => array(
+      'form_key'  => 'offer_id',
+      'name'      => 'Offer id',
+      'type'      => 'hidden',
+      'extra'     => array(
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '='
+      ),
+      'mandatory' => 0,
+    ),
+    'coupon_id' => array(
+      'form_key'  => 'coupon_id',
+      'name'      => 'Coupon id',
+      'type'      => 'hidden',
+      'extra'     => array(
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '='
+      ),
+      'mandatory' => 0,
+    ),
+  );
+
+  return $components;
+}

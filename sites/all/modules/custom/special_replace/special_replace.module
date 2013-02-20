@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * This module implements the replace for all listed chatacters on the Admin section
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function special_replace_permission() {
+  return array(
+    'administer special replace configuration' => array(
+      'title' => t('Special Replace configuration'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function special_replace_menu() {
+  $items = array();
+  
+  $items['admin/config/special_replace'] = array(
+    'title' => 'Special Replace Configuration',
+    'description' => 'Set all the replaces.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('special_replace_settings_form'),
+    'access arguments' => array('administer special replace configuration'),
+    'file' => 'special_replace.admin.inc',
+    'type' => MENU_NORMAL_ITEM
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function special_replace_page_alter(&$page) {
+  module_load_include('inc', 'special_replace', 'special_replace.common');
+  if (special_replace_is_admin_page() || special_replace_is_content_edit_page()) {
+    return;
+  }  
+  
+  $page['#post_render'][] = '_special_replace_body_content';
+}
+

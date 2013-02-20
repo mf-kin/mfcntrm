@@ -1,0 +1,9 @@
+ADDTHIS CHANGELOG
+-----------------
+7.x-2.1-beta (cit_version: 7.x-1.2) Tue, Mar 06, 2012
+  [ENHANCEMENTS]
+  * addthis.variable.inc: additional file to make variables translatable.
+
+7.x-2.1-beta (cit_version: 7.x-1.1) Mon, Jan 24, 2012
+  [ENHANCEMENTS]
+  * addthis.admin: Added to Google Plus +1 as an option to Widget Version (version 250)

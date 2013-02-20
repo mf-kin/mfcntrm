@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Manages FAQ (questions/answers) content, providing a search enabled listing
+ */
+
+/**
+ * Implements hook_node_info().
+ */
+function faq_node_info() {
+  return array(
+    'faq' => array(
+      'name' => t('FAQs'),
+      'base' => 'node_content',
+      'has_title' => TRUE,
+      'title_label' => t('FAQ title'),
+      'description' => t('Create a new FAQ (Question/Answer) item accessible to users.'),
+    )
+  );
+}
+
+
+/**
+ * Implements hook_views_api().
+ * return data to import a views
+ */
+function faq_views_api() {
+  return array(
+    'api' => 2.0,
+    'template path' => drupal_get_path('module', 'faq') . '/themes',
+  );
+}
+
+
+/**
+ * Implements hook_views_default_views().
+ * Import a views
+ */
+function faq_views_default_views() {
+  module_load_include('inc', 'faq', 'inc/faq.views');
+
+  $faq_view = faq_get_views_definition();
+  $views[$faq_view->name] = $faq_view;
+
+  return $views;
+}
+
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function faq_block_view_alter(&$data, $block) {
+  $is_faq_search_mobile_block = ($block->module == 'views' && $block->delta == '-exp-faqs-faq_page_mobile');
+  $is_faq_search_block = ($block->module == 'views' && $block->delta == '-exp-faqs-faqs_page');
+  if ($is_faq_search_block || $is_faq_search_mobile_block) {
+    drupal_add_js(drupal_get_path('module', 'faq') . '/scripts/faq_search.js');
+    drupal_add_css(drupal_get_path('module', 'faq') . '/styles/faq_search.css');
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function faq_menu() {
+  $items = array();
+
+  $items['admin/config/faqs'] = array(
+    'title' => 'FAQs module settings',
+    'description' => 'Configure the FAQs functionality.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('faq_admin_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'inc/faq.admin.inc',
+  );
+
+  if (module_exists('mobile_tools')) {
+    $items['admin/config/faqs/faqs_mobile']= array(
+      'title' => 'FAQs module settings for mobile',
+      'description' => 'Configure the FAQs mobile functionality.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('faq_admin_form_mobile'),
+      'access arguments' => array('access administration pages'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'inc/faq.admin.inc',
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function faq_init() {
+  module_load_include('inc', 'faq', 'inc/faq.common');
+  faq_add_js_settings();
+}
+
+/**
+ * Implementation of hook_views_pre_render().
+ * 
+ * @param type $view 
+ */
+function faq_views_pre_render(&$view) {
+  if ($view->name == 'faqs') {
+    if(module_exists('mobile_tools')) {
+      $mobile_device = mobile_tools_get_device();
+    }
+    else { 
+      $mobile_device = array('type' => 'desktop', 'group' => '');
+    }
+    if ($mobile_device['type'] == 'mobile') {
+      $is_answer_collapsible = variable_get('faq_answer_expansion_mode_mobile', '1');
+    }
+    else {
+      $is_answer_collapsible = variable_get('faq_answer_expansion_mode');
+    }
+    
+    if ($is_answer_collapsible) {
+      switch($is_answer_collapsible) {
+        case '1':
+          drupal_add_js(drupal_get_path('module', 'faq') . '/scripts/faq_collapsible.js');
+          break;
+        case '2':
+          drupal_add_js(drupal_get_path('module', 'faq') . '/scripts/faq_multiple_collapsible.js');
+          break;
+      }
+      drupal_add_css(drupal_get_path('module', 'faq') . '/styles/faq_base.css');
+      
+      $view->field['field_faq_answer']->options['element_wrapper_class'] .= ' faq-answer-expandable';
+    }
+  }
+}

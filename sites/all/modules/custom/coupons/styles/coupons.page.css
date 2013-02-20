@@ -1,0 +1,6 @@
+div.coupon-thank-page div#loader-print-button {
+  background: url("../images/loader.gif") no-repeat scroll 0 0 transparent;
+  display: block;
+  height: 32px;
+  width: 32px;
+}

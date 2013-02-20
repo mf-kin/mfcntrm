@@ -1,0 +1,61 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install for fblikebutton
+ */
+
+define('FACEBOOK_LOCALIZED_BLOCK', 'fblikebutton_currentpage_bl_');
+/**
+ * Implementation of hook_install().
+ */
+function fblikebutton_install() {
+  //  There really is no "schema" to install.
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function fblikebutton_uninstall() {
+  variable_del('fblikebutton_node_types');
+  variable_del('fblikebutton_show_faces');
+  variable_del('fblikebutton_layout');
+  variable_del('fblikebutton_color_scheme');
+  variable_del('fblikebutton_iframe_height');
+  variable_del('fblikebutton_iframe_width');
+  variable_del('fblikebutton_iframe_css');
+  variable_del('fblikebutton_language');
+  variable_del('fblikebutton_displaysend');
+  variable_del('fblikebutton_font');
+  variable_del('fblikebutton_weight');
+  variable_del('fblikebutton_showonteasers');
+  variable_del('fblikebutton_xfbml');
+  variable_del('fblikebutton_appid');
+  variable_del('fblikebutton_bl_layout');
+  variable_del('fblikebutton_bl_show_faces');
+  variable_del('fblikebutton_bl_action');
+  variable_del('fblikebutton_bl_font');
+  variable_del('fblikebutton_bl_color_scheme');
+  variable_del('fblikebutton_bl_iframe_width');
+  variable_del('fblikebutton_bl_iframe_height');
+  variable_del('fblikebutton_bl_iframe_css');
+  variable_del('fblikebutton_bl_language');
+  variable_del('fblikebutton_bl_displaysend');
+  variable_del('fblikebutton_action');
+  variable_del('fblikebutton_block_url');
+  $installed_module_block_variables = _fetch_installed_block_variables();
+  foreach ($installed_module_block_variables as $module_variable) {
+    variable_del( FACEBOOK_LOCALIZED_BLOCK . $module_variable);
+  }
+  variable_del('fblikebutton_displaysend');
+  variable_del('fblikebutton_bl_displaysend');
+  variable_del('fblikebutton_bl_url');
+}
+
+/**
+ * Retrieve the keys of the array. Contains a set of variables used on this module
+ */
+function _fetch_installed_block_variables() {
+  return array('action', 'color_scheme', 'font', 'iframe_css', 'iframe_height', 'iframe_width', 'language', 'layout', 'show_faces', 'displaysend');
+}

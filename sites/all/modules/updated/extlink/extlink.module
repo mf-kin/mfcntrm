@@ -1,0 +1,482 @@
+<?php
+// $Id: extlink.module,v 1.6 2010/10/17 00:38:24 quicksketch Exp $
+
+function extlink_menu() {
+  $items = array();
+  $items['admin/config/user-interface/extlink'] = array(
+    'title' => 'External links',
+    'description' => 'Alter the display of external links on the site.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('extlink_admin_settings'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer site configuration'),
+  );
+  
+  if(module_exists('mobile_tools')) {
+  $items['admin/config/user-interface/extlink/mobile'] = array(
+    'title' => 'External links for Mobile',
+    'description' => 'Alter the display of external links on the mobile site.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('extlink_admin_settings_mobile'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer site configuration'),
+  );
+  }
+  return $items;
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function extlink_init() {
+
+  // check if current page is excluded for extlink
+  if (drupal_match_path($_GET['q'], variable_get('extlink_exclude_paths', ''))) {
+    return;
+  }
+
+  $path = drupal_get_path('module', 'extlink');
+
+  $mobile_type = 'desktop';
+  if (module_exists('mobile_tools')) {
+    $device_type = mobile_tools_get_device();
+    $mobile_type = $device_type['type'];
+  }
+
+  if ($mobile_type == 'mobile') {
+    $settings = array(
+      'extTarget'               => variable_get('extlink_target_mobile', 0),
+      'extClass'                => variable_get('extlink_class_mobile', 'ext'),
+      'extContainerClass'       => variable_get('extlink_window_class_mobile', 'extlink-window-message'),
+      'extSubdomains'           => variable_get('extlink_subdomains_mobile', 1),
+      'extExclude'              => variable_get('extlink_exclude_mobile', ''),
+      'extInclude'              => variable_get('extlink_include_mobile', ''),
+      'extAlert'                => variable_get('extlink_alert_mobile', FALSE),
+      'extAlertText'            => t(variable_get('extlink_alert_text_mobile', NULL)),
+      'extOkLabel'              => t(variable_get('extlink_confirm_button_mobile', 'Ok')),
+      'extCancelLabel'          => t(variable_get('extlink_cancel_button_mobile', 'Cancel')),
+      'extCloseButton'          => t(variable_get('extlink_close_button_mobile', '')),
+      'mailtoClass'             => variable_get('extlink_mailto_class_mobile', 'mailto'),
+      'extHtmlText'             => _get_extlink_overlay_html_content(),
+    );
+  }
+  else {
+    $settings = array(
+      'extTarget'               => variable_get('extlink_target', 0),
+      'extClass'                => variable_get('extlink_class', 'ext'),
+      'extContainerClass'       => variable_get('extlink_window_class', 'extlink-window-message'),
+      'extSubdomains'           => variable_get('extlink_subdomains', 1),
+      'extExclude'              => variable_get('extlink_exclude', ''),
+      'extInclude'              => variable_get('extlink_include', ''),
+      'extAlert'                => variable_get('extlink_alert', FALSE),
+      'extAlertText'            => t(variable_get('extlink_alert_text', NULL)),
+      'extOkLabel'              => t(variable_get('extlink_confirm_button', 'Ok')),
+      'extCancelLabel'          => t(variable_get('extlink_cancel_button', 'Cancel')),
+      'extCloseButton'          => t(variable_get('extlink_close_button', 'X')),
+      'mailtoClass'             => variable_get('extlink_mailto_class', 'mailto'),
+      'extHtmlText'             => _get_extlink_overlay_html_content(),
+    );
+  }
+
+  drupal_add_library('system', 'ui.dialog');
+  
+  if (variable_get('extlink_class', 'ext') == 'ext' || variable_get('extlink_mailto_class', 'mailto') == 'mailto') {
+    drupal_add_css($path . '/extlink.css');
+  }
+  extlink_load_js($settings);
+  // include overlay default css if needed
+  if (variable_get('extlink_alert', FALSE) && variable_get('extlink_load_css', TRUE)) {
+    drupal_add_css($path . '/modal.css');
+  }
+}
+
+function extlink_load_js($settings) {  
+  drupal_add_js(drupal_get_path('module', 'extlink') . '/extlink.js');
+  drupal_add_js(array('extlink' => $settings), 'setting');
+}
+
+function extlink_admin_settings() {
+  $form = array();
+
+  $form['extlink_class'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add icon to external links'),
+    '#return_value' => 'ext',
+    '#default_value' => variable_get('extlink_class', 'ext'),
+    '#description' => t('Places an !icon icon next to external links.', array('!icon' => theme_image(array('path' => drupal_get_path('module', 'extlink') . '/extlink.png', 'alt' => t('External Links icon'), 'attributes' => array())))),
+  );
+
+  $form['extlink_mailto_class'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add icon to mailto links'),
+    '#return_value' => 'mailto',
+    '#default_value' => variable_get('extlink_mailto_class', 'mailto'),
+    '#description' => t('Places an !icon icon next to mailto links.', array(
+      '!icon' => theme_image(array(
+        'path' => drupal_get_path('module', 'extlink') . '/mailto.png',
+        'alt' => t('Email links icon'),
+        'attributes' => '',
+      )),
+    )),
+  );
+
+  $form['extlink_subdomains'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Consider subdomains internal'),
+    '#default_value' => variable_get('extlink_subdomains', 1),
+    '#description' => t('If checked, links with the same primary domain will all be considered internal. A link from www.example.com to my.example.com would be considered internal. Links between the www. and non-www. domain are always considered internal.'),
+  );
+
+  $form['extlink_target'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Open external links in a new window'),
+    '#return_value' => '_blank',
+    '#default_value' => variable_get('extlink_target', 0),
+    '#description' => t('Should all external links be opened in a new window?'),
+  );
+  
+  $form['extlink_exclude_paths'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Exclude paths'),
+    '#description' => t('Define which paths are excluded from external links (e.g., admin pages).'),
+    '#default_value' => variable_get('extlink_exclude_paths', ''),
+    '#rows' => 8,
+  );
+
+  $form['extlink_alert'] = array(
+    '#type' => 'radios',
+    '#title' => t('Display message mode'),
+    '#default_value' => variable_get('extlink_alert', FALSE),
+    '#options' => array(
+      0 => 'Display alert warning',
+      1 => 'Display HTML overlay warning',
+    ),
+  );
+  
+  $extlink_alert_text = t(variable_get('extlink_alert_text', 'This link will take you to an external web site. We are not responsible for their content.'));
+  $form['extlink_alert_text'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Pop-up warning text'),
+    '#default_value' => $extlink_alert_text,
+    '#description' => t('Text to display in the pop-up external link warning box.'),
+  );
+
+  $patterns = array(
+    '<em>(example\.com)</em> ' . t('Matches example.com.'),
+    '<em>(example\.com)|(example.net)</em> ' . t('Multiple patterns can be strung together by using a pipe. Matches example.com OR example.net.'),
+    '<em>(links/goto/[0-9]+/[0-9]+)</em> ' . t('Matches links that go through the <a href="http://drupal.org/project/links">Links module</a> redirect.'),
+  );
+
+  $wildcards = array(
+    '<em>.</em> ' . t('Matches any character.'),
+    '<em>?</em> ' . t('The previous character or set is optional.'),
+    '<em>\d</em> ' . t('Matches any digit (0-9).'),
+    '<em>[a-z]</em> ' . t('Brackets may be used to match a custom set of characters. This matches any alphabetic letter.'),
+  );
+  
+  $form['html_options'] = array(
+    '#tree' => FALSE,
+    '#type' => 'fieldset',
+    '#title' => t('HTML options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['html_options']['extlink_load_css'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add default CSS to overlay'),
+    '#return_value' => 'ext',
+    '#default_value' => variable_get('extlink_load_css', TRUE),
+    '#description' => t('Load default layout file for overlay.'),
+  );
+  
+  $form['html_options']['extlink_window_class'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Class for the exit site message window'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_window_class', 'extlink-window-message'),
+    '#description' => t('Set the id to be used in the CSS. '),
+  );
+
+  $form['html_options']['extlink_confirm_button'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Confirm button text'),
+    '#maxlength' => NULL,
+    '#default_value' => t(variable_get('extlink_confirm_button', 'OK')),
+    '#description' => t('Confirm button text. Leave it blank to remove.'),
+  );
+
+  $form['html_options']['extlink_cancel_button'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Cancel button text'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_cancel_button', 'Cancel'),
+    '#description' => t('Cancel button text. Leave it blank to remove.'),
+  );
+
+  $form['html_options']['extlink_close_button'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Close button text'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_close_button', 'X'),
+    '#description' => t('Close button text. Leave it blank to remove.'),
+  );
+  
+  $extlink_html_text = t(variable_get('extlink_html_text', 'This link will take you to an external web site. We are not responsible for their content.'));
+  $form['html_options']['extlink_html_text'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Disclaimer HTML text'),
+    '#default_value' => $extlink_html_text,
+    '#description' => t('Disclaimer text displayed when an external link is clicked
+      Available placeholders:<br />
+      <ul>
+        <li>@target_link@ -> complete link with the "a" tag</li>
+        <li>@target_url@ -> URL text module</li>
+        <li>@base_path@ -> Site base URL</li>
+      </ul>
+      To use another link instead of the OK button, be sure to add the class "<strong>target-link</strong>" to it, so it will keep the same behavior.<br />
+    '),
+  );
+
+  $form['patterns'] = array(
+    '#tree' => FALSE,
+    '#type' => 'fieldset',
+    '#title' => t('Pattern matching'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' =>
+      '<p>' . t('External links uses patterns (regular expressions) to match the "href" property of links.') . '</p>' .
+      t('Here are some common patterns.') .
+      theme('item_list', $patterns) .
+      t('Common special characters:') .
+      theme('item_list', $wildcards) .
+      '<p>' . t('All special characters (<em>^ $ . ? ( ) | * +</em>) must also be escaped with backslashes. Patterns are not case-sensitive. Any <a href="http://www.javascriptkit.com/javatutors/redev2.shtml">pattern supported by JavaScript</a> may be used.') . '</p>',
+  );
+
+  $form['patterns']['extlink_exclude'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Exclude links matching the pattern'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_exclude', ''),
+    '#description' => t('Enter a regular expression for links that you wish to exclude from being considered external.'),
+  );
+
+  $form['patterns']['extlink_include'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Include links matching the pattern'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_include', ''),
+    '#description' => t('Enter a regular expression for internal links that you wish to be considered external.'),
+  );
+
+  return system_settings_form($form);
+}
+
+function extlink_admin_settings_mobile() {
+  $form_mobile = array();
+
+  $form_mobile['extlink_class_mobile'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add icon to external links'),
+    '#return_value' => 'ext',
+    '#default_value' => variable_get('extlink_class', 'ext'),
+    '#description' => t('Places an !icon icon next to external links.', array('!icon' => theme_image(array('path' => drupal_get_path('module', 'extlink') . '/extlink.png', 'alt' => t('External Links icon'), 'attributes' => array())))),
+  );
+
+  $form_mobile['extlink_mailto_class_mobile'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add icon to mailto links'),
+    '#return_value' => 'mailto',
+    '#default_value' => variable_get('extlink_mailto_class', 'mailto'),
+    '#description' => t('Places an !icon icon next to mailto links.', array(
+      '!icon' => theme_image(array(
+        'path' => drupal_get_path('module', 'extlink') . '/mailto.png',
+        'alt' => t('Email links icon'),
+        'attributes' => '',
+      )),
+    )),
+  );
+
+  $form_mobile['extlink_subdomains_mobile'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Consider subdomains internal'),
+    '#default_value' => variable_get('extlink_subdomains', 1),
+    '#description' => t('If checked, links with the same primary domain will all be considered internal. A link from www.example.com to my.example.com would be considered internal. Links between the www. and non-www. domain are always considered internal.'),
+  );
+
+  $form_mobile['extlink_target_mobile'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Open external links in a new window'),
+    '#return_value' => '_blank',
+    '#default_value' => variable_get('extlink_target', 0),
+    '#description' => t('Should all external links be opened in a new window?'),
+  );
+  
+  $form_mobile['extlink_exclude_paths_mobile'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Exclude paths'),
+    '#description' => t('Define which paths are excluded from external links (e.g., admin pages).'),
+    '#default_value' => variable_get('extlink_exclude_paths', ''),
+    '#rows' => 8,
+  );
+
+  $form_mobile['extlink_alert_mobile'] = array(
+    '#type' => 'radios',
+    '#title' => t('Display message mode'),
+    '#default_value' => variable_get('extlink_alert', FALSE),
+    '#options' => array(
+      0 => 'Display alert warning',
+      1 => 'Display HTML overlay warning',
+    ),
+  );
+  
+  $extlink_alert_text = t(variable_get('extlink_alert_text', 'This link will take you to an external web site. We are not responsible for their content.'));
+  $form_mobile['extlink_alert_text_mobile'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Pop-up warning text'),
+    '#default_value' => $extlink_alert_text,
+    '#description' => t('Text to display in the pop-up external link warning box.'),
+  );
+
+  $patterns_mobile = array(
+    '<em>(example\.com)</em> ' . t('Matches example.com.'),
+    '<em>(example\.com)|(example.net)</em> ' . t('Multiple patterns can be strung together by using a pipe. Matches example.com OR example.net.'),
+    '<em>(links/goto/[0-9]+/[0-9]+)</em> ' . t('Matches links that go through the <a href="http://drupal.org/project/links">Links module</a> redirect.'),
+  );
+
+  $wildcards_mobile = array(
+    '<em>.</em> ' . t('Matches any character.'),
+    '<em>?</em> ' . t('The previous character or set is optional.'),
+    '<em>\d</em> ' . t('Matches any digit (0-9).'),
+    '<em>[a-z]</em> ' . t('Brackets may be used to match a custom set of characters. This matches any alphabetic letter.'),
+  );
+  
+  $form_mobile['html_options_mobile'] = array(
+    '#tree' => FALSE,
+    '#type' => 'fieldset',
+    '#title' => t('HTML options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form_mobile['html_options_mobile']['extlink_load_css'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add default CSS to overlay'),
+    '#return_value' => 'ext',
+    '#default_value' => variable_get('extlink_load_css', TRUE),
+    '#description' => t('Load default layout file for overlay.'),
+  );
+  
+  $form_mobile['html_options_mobile']['extlink_window_class_mobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Class for the exit site message window'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_window_class', 'extlink-window-message'),
+    '#description' => t('Set the id to be used in the CSS. '),
+  );
+
+  $form_mobile['html_options_mobile']['extlink_confirm_button_mobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Confirm button text'),
+    '#maxlength' => NULL,
+    '#default_value' => t(variable_get('extlink_confirm_button_mobile', 'OK')),
+    '#description' => t('Confirm button text. Leave it blank to remove.'),
+  );
+
+  $form_mobile['html_options_mobile']['extlink_cancel_button_mobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Cancel button text'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_cancel_button_mobile', 'Cancel'),
+    '#description' => t('Cancel button text. Leave it blank to remove.'),
+  );
+
+  $form_mobile['html_options_mobile']['extlink_close_button_mobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Close button text'),
+    '#maxlength' => NULL,
+    '#description' => t('Close button text. Leave it blank to remove.'),
+  );
+  
+  $extlink_html_text_mobile = t(variable_get('extlink_html_text_mobile', 'This link will take you to an external web site. We are not responsible for their content.'));
+  $form_mobile['html_options_mobile']['extlink_html_text_mobile'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Disclaimer HTML text'),
+    '#default_value' => $extlink_html_text_mobile,
+    '#description' => t('Disclaimer text displayed when an external link is clicked
+      Available placeholders:<br />
+      <ul>
+        <li>@target_link@ -> complete link with the "a" tag</li>
+        <li>@target_url@ -> URL text module</li>
+        <li>@base_path@ -> Site base URL</li>
+      </ul>
+      To use another link instead of the OK button, be sure to add the class "<strong>target-link</strong>" to it, so it will keep the same behavior.<br />
+    '),
+  );
+
+  $form_mobile['patterns_mobile'] = array(
+    '#tree' => FALSE,
+    '#type' => 'fieldset',
+    '#title' => t('Pattern matching'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' =>
+      '<p>' . t('External links uses patterns (regular expressions) to match the "href" property of links.') . '</p>' .
+      t('Here are some common patterns.') .
+      theme('item_list', $patterns_mobile) .
+      t('Common special characters:') .
+      theme('item_list', $wildcards_mobile) .
+      '<p>' . t('All special characters (<em>^ $ . ? ( ) | * +</em>) must also be escaped with backslashes. Patterns are not case-sensitive. Any <a href="http://www.javascriptkit.com/javatutors/redev2.shtml">pattern supported by JavaScript</a> may be used.') . '</p>',
+  );
+
+  $form_mobile['patterns_mobile']['extlink_exclude_mobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Exclude links matching the pattern'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_exclude_mobile', ''),
+    '#description' => t('Enter a regular expression for links that you wish to exclude from being considered external.'),
+  );
+
+  $form_mobile['patterns_mobile']['extlink_include_mobile'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Include links matching the pattern'),
+    '#maxlength' => NULL,
+    '#default_value' => variable_get('extlink_include_mobile', ''),
+    '#description' => t('Enter a regular expression for internal links that you wish to be considered external.'),
+  );
+
+  return system_settings_form($form_mobile);
+}
+
+
+/**
+ * Creates the HTML content to be displayed inside the overlay.
+ */
+function _get_extlink_overlay_html_content() {
+  $device_type = 'desktop';
+  if(module_exists('mobile_tools')) {
+    $device_type = mobile_tools_get_device();
+    $device_type = $device_type['type'];
+  }  
+  
+  // extra class of overlay
+  $class = variable_get('extlink_window_class', 'extlink-window-message');
+  if (!empty($class)) {
+    $class = 'class="' . $class . '"';
+  }
+  
+  if($device_type == 'mobile') {
+	  $html_content = t(variable_get('extlink_html_text_mobile', NULL));
+  }
+  else{
+  	  $html_content = t(variable_get('extlink_html_text', NULL));	  
+  }
+  $html_content = str_replace('@base_path@', base_path(), $html_content);
+  $output = <<<HTML
+    <div id="extlink-window-container" {$class}>
+      {$html_content}
+    </div>
+HTML;
+
+  return $output;
+}

@@ -1,0 +1,9 @@
+name = Special Triggers
+description = "Enables actions to be fired on new system events"
+package = pfizer
+core = 7.x
+
+dependencies[] = trigger
+
+version = "7.x-1.0"
+core = "7.x"

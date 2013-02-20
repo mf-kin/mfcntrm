@@ -1,0 +1,110 @@
+<?php
+/**
+ * @file
+ * Related content modules schema install and unistall
+ */
+
+function related_content_uninstall() {
+  drupal_uninstall_schema('related_content');
+}
+
+function related_content_schema() {
+  $schema = array();
+  
+  $schema['related_content_blocks'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Id for the related blocks.'
+      ),
+      'max_items' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Max numbers of items to be displayed on the related content block',
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Vocabulary to be used to retrieve the related content.',
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  
+  $schema['related_content_types'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Id for the related blocks.'
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Content types that should be displayed on the related content block.'
+      ),
+      'link_text' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => 'Text for "Read More link"'  
+      )  
+    ),
+    'primary key' => array('id', 'type'),
+  );
+  
+  $schema['related_content_fields'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Id for the related blocks.'
+      ),
+      'field' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Field that must be displayed on the block.'
+      ),
+    ),
+    'primary key' => array('id', 'field'),
+  );
+  
+  $schema['related_content_exclude_terms'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Id for the related blocks.'
+      ),
+      'tid' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Term ids to be excluded from the block.',
+      ),
+    ),
+    'primary key' => array('id', 'tid'),
+  );
+  
+  return $schema;
+}

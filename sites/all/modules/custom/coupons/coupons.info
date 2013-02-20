@@ -1,0 +1,10 @@
+name = Coupons
+description = Creates the Coupon content-type and the management for its tasks.
+core = 7.x
+package = pfizer
+version = "7.x-1.9"
+
+dependencies[] = date
+dependencies[] = cemhub
+dependencies[] = webform
+dependencies[] = metatags_quick

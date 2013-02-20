@@ -1,0 +1,453 @@
+<?php
+/**
+ * @file
+ * Related articles module
+ */
+
+function related_content_menu() {
+  $items = array();
+  
+  $items['admin/structure/block/add-related-content'] = array(
+    'title' => 'Add related content block',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('related_content_add_block_form'),
+    'access arguments' => array('add relate content block'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'related_content.add-block.inc'
+  );
+  
+  return $items;
+}
+
+function related_content_block_info() {
+  $blocks = array();
+
+  $configs = db_select('related_content_blocks', 'b')
+                  ->fields('b', array('id'))
+                  ->execute()
+                  ->fetchAllAssoc('id', PDO::FETCH_ASSOC);
+
+  foreach ($configs as $config) {
+    $blocks[$config['id']] = array(
+      'info' => $config['id'],
+      'cache' => DRUPAL_CACHE_PER_PAGE,
+    );
+  }
+
+  return $blocks;
+}
+
+function related_content_block_view($delta = '') {
+  $config = db_select('related_content_blocks', 'b')
+          ->fields('b')
+          ->execute()
+          ->fetchAllAssoc('id', PDO::FETCH_ASSOC);
+
+  $block = array();
+  
+  if (!empty($config)) {
+    // TODO create a title field
+    $block['subject'] = $config[$delta]['id'];
+    $block['content'] = related_content_get_block_content($delta);
+  }
+  
+  return $block;
+}
+
+function related_content_block_configure($delta = '') {
+  $config = related_content_get_block_config($delta);
+  $form = FALSE;
+  if ($config) {
+    if (!isset($form_state) && $_GET['q'] != 'system/ajax') {
+      $form_state['values'] = $config;
+
+      foreach ($config['content_types'] as $type => $type_info) {
+        $form_state['values']['content_type'][$type] = $type;
+      }
+      
+      foreach ($config['fields'] as $field => $field_info) {
+        $form_state['values']['fields'][$field] = $field;
+      }
+
+      $form_state['values']['vid'] = $config['vid'];
+      
+      foreach ($config['exclude_terms'] as $tid => $term) {
+        $form_state['values']['exclude_terms'][$tid] = $tid;
+      }
+    }
+    else {
+      list($form, $form_state) = ajax_get_form();
+      $form_state['values'] = $form_state['input'];
+    }
+    $form = related_content_get_fields($form_state);
+    $form['id']['#default_value'] = $form_state['values']['id'];
+    $form['content_type']['#default_value'] = $form_state['values']['content_type'];
+    $form['fields_wrapper']['fields']['#default_value'] = $form_state['values']['fields'];
+    $form['vid']['#default_value'] = $form_state['values']['vid'];
+    $form['max_items']['#default_value'] = $form_state['values']['max_items'];
+    foreach ($config['content_types'] as $type => $type_info) {      
+      $form['fields_wrapper']['link_text_'. $type]['#default_value'] = $type_info['link_text'];
+    }
+    if (isset($form['exclude_terms_wrapper']['exclude_terms'])) {
+      $form['exclude_terms_wrapper']['exclude_terms']['#default_value'] = $form_state['values']['exclude_terms'];
+    }
+        
+    $form['template'] = array(
+      '#type' => 'markup',
+      '#value' => t('To use a custom template for this block create the realated-content-block--') 
+        . str_replace('_', '-', $config['id']),
+    );
+  }
+  
+  return $form;
+}
+
+function related_content_block_save($delta, $edit) {
+  db_update('related_content_blocks')->fields(array(
+    'id' => $edit['id'],
+    'max_items' => $edit['max_items'],
+    'vid' => $edit['vid'],
+  ))->condition('id', $delta)->execute();
+  
+  db_delete('related_content_types')->condition('id', $delta)->execute();
+  
+  // insert new types
+  $content_type_query = db_insert('related_content_types')->fields(array('id', 'type', 'link_text'));
+  foreach ($edit['content_type'] as $content_type) {
+    if ($content_type) {
+      if(isset($edit['link_text_'.$content_type]) && 
+              $edit['link_text_'.$content_type] != "") {
+        $link_text = t($edit['link_text_'.$content_type]);
+      }
+      else {
+        $link_text = NULL;
+      }
+      $content_type_query->values(array($edit['id'], $content_type, $link_text));
+      $content_type_query->execute();
+    }
+  }
+  
+  db_delete('related_content_exclude_terms')->condition('id', $delta)->execute();
+  
+  // insert new vocabularies
+  $vocabularies_query = db_insert('related_content_exclude_terms')->fields(array('id', 'tid'));
+  foreach ($edit['exclude_terms'] as $tid) {
+    if ($tid) {
+      $vocabularies_query->values(array($edit['id'], $tid));
+      $vocabularies_query->execute();
+    }
+  }
+  
+  db_delete('related_content_fields')->condition('id', $delta)->execute();
+  
+  // insert new fields
+  $fields_query = db_insert('related_content_fields')->fields(array('id', 'field'));
+  foreach ($edit['fields'] as $field) {
+    if ($field) {
+      $fields_query->values(array($edit['id'], $field));
+      $fields_query->execute();
+    }
+  }
+}
+
+function related_content_get_block_content($delta) {
+  $config = related_content_get_block_config($delta);
+  $node = menu_get_object();  
+  return theme(array('related_content_block__' . $delta, 'related_content_block'), array(
+    'nodes' => related_content_get_related_nodes($node, $config),
+    'config' => $config,
+    'node' => $node,
+  ));
+}
+
+function related_content_get_related_nodes($node = NULL, $config = NULL) {
+  
+  $query = db_select('node', 'n')->fields('n', array('title', 'changed', 'nid', 'type'));
+  $query->addExpression('count(n.nid)', 'relevancy');
+  $query->addJoin('INNER', 'taxonomy_index', 'tindex', 'n.nid = tindex.nid');
+  $query->where('n.nid NOT IN (SELECT ti.nid FROM {taxonomy_index} ti '.
+          'INNER JOIN {related_content_exclude_terms} et ON et.tid = ti.tid '.
+          'WHERE et.id = :id)', array(':id' => $config['id']));
+  $query->groupBy('n.nid');
+  $query->orderBy('relevancy', 'DESC');
+  $query->orderBy('n.changed', 'DESC');
+  
+  foreach ($config['fields'] as $field => $field_info) {
+    if($field == 'body_summary' && 
+            !isset($config['fields']['body'])) {
+      $field = 'body';
+    } else if($field == 'body_summary' && 
+            isset($config['fields']['body'])) {
+      continue;
+    }
+    $query->addJoin('LEFT', 'field_data_' . $field, $field . '_alias',
+            'n.nid = ' . $field . '_alias.entity_id AND n.vid = ' . $field . '_alias.revision_id AND ' .
+            $field . '_alias.entity_type = \'node\'');
+    $query->fields($field . '_alias');
+  }
+
+  $query->condition('n.type', $config['content_types'], 'IN');
+
+  $node = $node ? $node : menu_get_object();
+  
+  $result = array();
+
+  if ($node != NULL) {
+
+    // starting the round_tags with the tags that are associted with the current node
+    $round_terms = array();
+    $terms = array();
+
+    $selected_nodes = array($node->nid);
+
+    while (count($result) < $config['max_items']) {
+      $round_query = clone $query;
+
+      $round_terms = related_content_get_next_round_tags($node->nid, $config, $terms, $round_terms);
+      if (empty($round_terms)) {
+        break;
+      }
+
+      $terms = array_merge($terms, $round_terms);
+
+      $round_query->condition('tindex.tid', $terms, 'IN');
+      $round_query->condition('n.nid', $selected_nodes, 'NOT IN');
+      $round_query->range(0, $config['max_items'] - count($selected_nodes) + 1);
+      $query_result = $round_query->execute()->fetchAllAssoc('nid', PDO::FETCH_ASSOC);      
+      $result = array_merge($result, $query_result);
+
+      $selected_nodes = array_merge($selected_nodes, array_keys($query_result));      
+    }
+  }
+  
+  return $result;
+}
+
+function related_content_get_next_round_tags($nid, $config, $terms, $round_terms) {
+  if (empty($round_terms)) {
+    $result = related_content_get_tags($nid, $config);
+  }
+  else {
+    $result = array();
+    foreach ($round_terms as $term) {
+      $parents = taxonomy_get_parents($term);
+      foreach ($parents as $parent) {
+        if (!in_array($parent->tid, $round_terms)) {
+          if (!in_array($parent->tid, $terms)) {
+            $result[$parent->tid] = $parent->tid;
+          }
+        } // ELSE just ignore this term because it has already been used
+      }
+      
+      $children = taxonomy_get_children($term);
+      foreach ($children as $child) {
+        if (!in_array($child->tid, $round_terms)) {
+          if (!in_array($child->tid, $terms)) {
+            $result[$child->tid] = $child->tid;
+          }
+        } // ELSE just ignore this term because it has already been used
+      }
+    }
+  }
+  
+  return $result;
+}
+
+function related_content_get_block_config($id = '') {
+  $config_query_result = db_select('related_content_blocks', 'b')
+          ->fields('b')
+          ->condition('id', $id)
+          ->execute()->fetchAllAssoc('id', PDO::FETCH_ASSOC);
+  $config = $config_query_result[$id];
+  
+  if ($config) {
+  
+    // loading content types
+    $config['content_types'] = db_select('related_content_types', 'ct')
+                        ->fields('ct', array('type','link_text'))
+                        ->condition('id', $id)
+                        ->execute()
+                        ->fetchAllAssoc('type', PDO::FETCH_ASSOC);
+
+    // loading exclude terms
+    $config['exclude_terms'] = db_select('related_content_exclude_terms', 't')
+                        ->fields('t', array('tid'))
+                        ->condition('id', $id)
+                        ->execute()
+                        ->fetchAllAssoc('tid', PDO::FETCH_ASSOC);
+    
+    // loading fields
+    $config['fields'] = db_select('related_content_fields', 'f')
+                        ->fields('f', array('field'))
+                        ->condition('id', $id)
+                        ->execute()
+                        ->fetchAllAssoc('field', PDO::FETCH_ASSOC);
+  }
+
+  return $config;
+}
+
+function related_content_get_tags($nid, $config = array()) {
+  $query = db_select('taxonomy_index', 'tindex');
+  $query->innerJoin('taxonomy_term_data', 'td', 'td.tid = tindex.tid');
+  $query->fields('tindex', array('tid'))->condition('td.vid', $config['vid'])
+        ->condition('tindex.nid', $nid);
+  $result = $query->execute()->fetchAllAssoc('tid', PDO::FETCH_ASSOC);
+  
+  return array_keys($result);
+}
+
+function related_content_theme() {
+  return array(
+    'related_content_block' => array(
+      'variables' => array(
+        'config' => array(),
+        'nodes' => array(),
+        'node' => NULL
+      ),
+      'template' => 'related_content_block',
+      'pattern' => 'related_content_block__'
+    ),
+  );
+}
+
+function related_content_get_fields($form_state) {
+  
+  $form = array();
+  
+  $form['id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Block Id'),
+    '#required' => TRUE,
+  );
+  
+  $types = node_type_get_types();
+ 
+  $types_options = array();
+  
+  foreach ($types as $type) {
+    $types_options[$type->type] = $type->name;
+  }
+  
+  $form['content_type'] = array(
+    '#type' => 'checkboxes',
+    '#options' => $types_options,
+    '#title' => t('Content Type'),
+    '#required' => TRUE,
+    '#ajax' => array(
+      'callback' => 'related_content_get_content_fields',
+      'wrapper' => 'fields-wrapper',
+      'effect' => 'fade',
+    ),
+  );
+  
+  $form['fields_wrapper'] = array(
+    '#prefix' => '<div id="fields-wrapper">',
+    '#suffix' => '</div>',
+    '#tree' => FALSE,
+  );
+  
+  $selected_content_types = isset($form_state['values']) ? $form_state['values']['content_type'] : NULL;
+  if (isset($selected_content_types) && is_array($selected_content_types)) {
+    $selected_content_types = array_diff($selected_content_types, array(0));
+    if (!empty($selected_content_types)) {
+      $form['fields_wrapper']['fields'] = array(
+        '#type' => 'checkboxes',
+        '#options' => array(),
+        '#disabled' => TRUE,
+        '#title' => t('Fields to load'),
+        '#description' => t('Fields to be loaded with the block'),
+        '#required' => FALSE,
+      );
+      $field_instances = field_info_instances('node');
+      
+      $fields_options = array();
+      foreach ($field_instances as $type => $content_type_fields) {
+        if (in_array($type, $selected_content_types)) {
+          foreach ($content_type_fields as $field_name => $field_instance)  {                        
+            if (!isset($fields_options[$field_name])) {              
+              $fields_options[$field_name] = $field_instance['label'] . ' - ' . $type;
+              if($field_name == 'body') {
+                if(isset($field_instance['settings']['display_summary']) 
+                        && $field_instance['settings']['display_summary'] == 1) {
+                  $fields_options['body_summary'] = t('Summary') . ' - ' . $type;
+                }
+              }
+            }
+            else {
+              $fields_options[$field_name] .= ', ' . $type;
+            }
+          }          
+          $form['fields_wrapper']['link_text_'. $type] = array(
+            '#type' => 'textfield',
+            '#title' => t('Text of link for '. $type),
+            '#description' => t('Link to view the content. For example: Read Article, Watch Video.'),
+            '#required' => TRUE
+          );
+        }
+      }
+      
+      $form['fields_wrapper']['fields']['#disabled'] = FALSE;
+      $form['fields_wrapper']['fields']['#options'] = $fields_options;
+    }
+  }
+  
+  $vocabularies = taxonomy_get_vocabularies();
+  
+  $vocabulary_options = array();
+  
+  foreach ($vocabularies as $vocabulary) {
+    $vocabulary_options[$vocabulary->vid] = $vocabulary->name;
+  }
+  
+  $form['vid'] = array(
+    '#type' => 'radios',
+    '#options' => $vocabulary_options,
+    '#title' => t('Vocabularies'),
+    '#ajax' => array(
+      'callback' => 'related_content_get_terms',
+      'wrapper' => 'exclude-terms-wrapper',
+      'effect' => 'fade',
+      'method' => 'replace',
+    ),
+    '#submit' => array('related_content_rebuild_form'),
+  );
+  
+  $form['exclude_terms_wrapper'] = array(
+    '#prefix' => '<div id="exclude-terms-wrapper">',
+    '#suffix' => '</div>',
+    '#tree' => FALSE,
+    
+  );
+
+  if (isset($form_state['values']['vid'])) {
+    $vocabulary_tree = taxonomy_get_tree($form_state['values']['vid']);
+    $terms = array();
+    foreach ($vocabulary_tree as $term) {
+      $terms[$term->tid] = str_pad('', $term->depth, "-", STR_PAD_LEFT) . $term->name;
+    }
+    $form['exclude_terms_wrapper']['exclude_terms'] = array(
+      '#title' => t('Exclude terms'),
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#options' => $terms,
+    );
+  }
+  
+  $form['max_items'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Max items'),
+    '#required' => TRUE,
+  );
+  
+  return $form;
+
+}
+
+function related_content_get_terms($form, &$form_state) {
+  return $form['exclude_terms_wrapper'] ? $form['exclude_terms_wrapper'] : $form['settings']['exclude_terms_wrapper'];
+}
+
+function related_content_get_content_fields($form, &$form_state) {
+  return $form['fields_wrapper'] ? $form['fields_wrapper'] : $form['settings']['fields_wrapper'];
+}

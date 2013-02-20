@@ -1,0 +1,15 @@
+name = Emarketing Mobile
+description = Mobile theme for Drupal 7
+core = 7.x
+engine = phptemplate
+
+stylesheets[screen][] = css/base.css
+
+scripts[] = scripts/theme_general.js
+
+regions[header] = Header
+regions[carousel] = Carousel
+regions[navigation] = Navigation
+regions[content] = Content
+regions[content-bottom] = Content Bottom
+regions[footer] = Footer

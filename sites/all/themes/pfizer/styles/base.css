@@ -1,0 +1,77 @@
+/*
+* @ CSS for structural and general elements
+*/
+
+/**
+* General Settings
+*/
+
+div#skip-link {
+  display: none;	
+}
+
+a {
+  outline: none;
+  text-decoration: none;
+}
+
+.clear_both { 
+  clear: both;
+}
+
+div#container {
+  position: relative;
+}
+
+div#navigation {
+  width: 990px;
+  margin: 0 auto;
+}
+
+div#wrapper_content {
+  position: relative;
+  width: 980px;
+  margin: 0 auto;
+}
+
+div#right_sidebar,  
+div#left_sidebar{
+  width: 254px;  
+}
+
+div#right_sidebar {
+  float:right;
+}
+
+div#left_sidebar{
+  float: left;
+}
+
+div.holder.no_sidebars { 
+  width: 980px 
+}
+
+div.holder.left_sidebar,
+div.holder.right_sidebar { 
+  width: 726px;
+}
+
+div.holder.both_sidebars{
+  width: 472px;
+}
+
+div#footer {
+  width: 980px;
+  margin: 0 auto;
+}
+
+
+sup{
+  font-size:71%;
+}
+
+
+.element-invisible { display:none; }
+/**
+* [end of] General Settings
+*/

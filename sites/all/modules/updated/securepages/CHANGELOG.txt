@@ -1,0 +1,11 @@
+SECURE PAGES CHANGELOG
+-----------------
+7.x-1.x-dev (cit_version: 7.x-1.0) Tue, Mar 06, 2012
+  [BUGFIXES]
+  * all: Fix secure pages multi-language bugs
+  * all: Fix the way of the module gets the path, without the language prefix.
+  [ENHANCEMENTS]
+  * all: The module gets the path including language prefix. So, when it'll 
+      create the http or https url, the drupal path functions adding language 
+      prefix again and the url looks like this: 
+      http://www.example.com/es/es/admin/content.

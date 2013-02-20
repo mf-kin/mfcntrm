@@ -1,0 +1,821 @@
+<?php
+/**
+ * @file
+ * Install file for Instant Win module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function instant_win_install() {
+  node_types_rebuild();
+  $types = node_type_get_types();
+  node_add_body_field($types['prize']);
+
+  _instant_win_set_variables();
+  _instant_win_add_default_fields();
+  _instant_win_create_webform();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function instant_win_uninstall() {
+  _instant_win_delete_webform();
+  _instant_win_delete_variables();
+  _instant_win_remove_default_fields();
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function instant_win_schema() {
+  $schema = array();
+
+  $schema['instant_win_contest_entries'] = array(
+    'description' => 'Instant Win contest elegible winner entries.',
+    'fields' => array(
+      'ceid' => array(
+        'description' => 'The primary identifier for an entry.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'iwuid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'email' => array(
+        'description' => 'Contest participant email.',
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'contest_code' => array(
+        'description' => 'Sent contest code.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => 'url',
+      ),
+      'registered_at' => array(
+        'description' => 'Timestamp when entry was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'processed_at' => array(
+        'description' => 'Timestamp when entry was processed to define win/loss.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'description' => 'Entry status. 0 - not processed; 1 - winner; 2 - loser (not available prize); 3 - loser (same household);',
+        ''
+      ),
+    ),
+    'indexes' => array(
+      'registered_at' => array('registered_at'),
+    ),
+    'primary key' => array('ceid'),
+    'foreign key' => array(
+      'user' => array(
+        'table' => 'instant_win_users',
+        'columns' => array('iwuid' => 'iwuid'),
+      ),
+    ),
+  );
+
+  $schema['instant_win_alternate_codes'] = array(
+    'description' => 'Instant Win alternate codes requests.',
+    'fields' => array(
+      'acid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'email' => array(
+        'description' => 'Contest participant email.',
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'contest_code' => array(
+        'description' => 'Alternate contest code.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => 'url',
+      ),
+      'requested_at' => array(
+        'description' => 'Timestamp when entry was requested.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'email_sent_at' => array(
+        'description' => 'Timestamp when email was sent.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'requested_at' => array('requested_at'),
+    ),
+    'primary key' => array('acid'),
+  );
+
+  $schema['instant_win_contest_codes'] = array(
+    'description' => 'Instant Win valid codes.',
+    'fields' => array(
+      'code' => array(
+        'description' => 'Contest code.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'is_alternate' => array(
+        'description' => 'Whether code is an alternative code.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => 0,
+      ),
+      'sent_at' => array(
+        'description' => 'Timestamp when code was sent to an user.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('code'),
+  );
+
+  $schema['instant_win_winners'] = array(
+    'description' => 'Instant Win winners.',
+    'fields' => array(
+      'wid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'ceid' => array(
+        'description' => 'The primary identifier for an entry.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'email' => array(
+        'description' => 'Contest participant email.',
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'code' => array(
+        'description' => 'Contest code.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'prize_nid' => array(
+        'description' => 'Won prize node id.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'user_registered_at' => array(
+        'description' => 'Timestamp when user contest entry was registered.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'prize_available_at' => array(
+        'description' => 'Timestamp when prize became available in the contest.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'formatted_user_registered_at' => array(
+        'description' => 'String with the timestamp conversion already performed with data information concatenated',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'household' => array(
+        'description' => 'String to describe winners household, concatenation of multiple address fields.',
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('wid'),
+    'foreign key' => array(
+      'contest_entry' => array(
+        'table' => 'instant_win_contest_entries',
+        'columns' => array('ceid' => 'ceid'),
+      ),
+    ),
+  );
+
+  $schema['instant_win_users'] = array(
+    'description' => 'Instant Win winners.',
+    'fields' => array(
+      'iwuid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'first_name' => array(
+        'description' => 'User first name.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'last_name' => array(
+        'description' => 'User last name.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'address_line_1' => array(
+        'description' => 'User mailing address line 1.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'address_line_2' => array(
+        'description' => 'User mailing address line 2.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'city' => array(
+        'description' => 'User mailing address city.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'state' => array(
+        'description' => 'User mailing address state.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'zip' => array(
+        'description' => 'User mailing address zip code.',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'email' => array(
+        'description' => 'User email.',
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'telephone' => array(
+        'description' => 'User telephone.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'dob' => array(
+        'description' => 'User date of birth.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'user_registered_at' => array(
+        'description' => 'Timestamp when user contest entry was registered.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'formatted_user_registered_at' => array(
+        'description' => 'String with the timestamp conversion already performed with data information concatenated',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('iwuid'),
+    'indexes' => array(
+      'email' => array('email'),
+    ),
+  );
+
+  $schema['instant_win_prize_timestamp'] = array(
+    'description' => 'Instant Win prizes timestamp.',
+    'fields' => array(
+      'tid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'prize_nid' => array(
+        'description' => 'Prize node id.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'description' => 'Timestamp of prizes',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'won_at' => array(
+        'description' => 'Timestamp when user won this prize.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),      
+    ),
+    'primary key' => array('tid'),
+    'unique keys' => array(
+      'timestamp' => array(
+        'timestamp'
+      ),
+    ),  
+  );
+
+  return $schema;
+}
+
+/**
+ * Deletes the variables of the Instant Win module.
+ */
+function _instant_win_delete_variables() {
+  watchdog("Instant Win", "Uninstalling module and deleting fields and variables");
+  db_delete('variable')->condition('name', 'instant_win_%', 'LIKE')->execute();
+}
+
+
+/**
+ * Initialize variables of the Instant Win module.
+ */
+function _instant_win_set_variables() {
+  $variables = _instant_win_get_variables_definition();
+
+  foreach ($variables as $name => $value) {
+    variable_set($name, $value);
+  }
+}
+
+function _instant_win_get_variables_definition() {
+  $variables = array(
+    'instant_win_already_register_same_day_error_message' => 'The game code you have entered was previously used today. Please enter a different game code.',
+    'instant_win_dob_min_age_to_register' => 18,
+    'instant_win_first_name_validation_pattern' => '/^[a-z]+$/i',
+    'instant_win_last_name_validation_pattern' => '/^[a-z]+$/i',
+    'instant_win_new_registration_form_display_success_as_overlay' => TRUE,
+    'instant_win_no_available_alternate_code' => 'No available alternate code. Try again later.',
+    'instant_win_number_of_users_per_process' => 100,
+    'instant_win_phone_validation_pattern' => '/^[0-9]{9,10}$/',
+    'instant_win_register_limit_user_get_a_code' => 10,
+    'instant_win_register_form_already_registered_message' => 'Your email is already registered. Please, use the "Already Registered" option to participate again.',
+    'instant_win_register_form_code_error_message' => 'The game code you have entered is not valid. Please enter a valid game code.',
+    'instant_win_register_form_dob_min_age_error_message' => 'You must be at least 18 years old to register.',
+    'instant_win_register_form_exceed_limit_per_day_message' => 'You exceeded the limit of registrations per day. Try again tomorrow.',
+    'instant_win_register_form_first_name_format_error_message' => 'First Name field requires at maximum 15 characters from A-Z and no spaces.',
+    'instant_win_register_form_last_name_format_error_message' => 'Last Name field requires at maximum 15 characters from A-Z and no spaces.',
+    'instant_win_register_form_not_already_registered_message' => 'Your email is either invalid or not registered. You have to register first to participate.',
+    'instant_win_register_form_phone_format_error_message' => 'Telephone (no dashes) format is not valid.',
+    'instant_win_register_form_zipcode_format_error_message' => 'Zip/Postal Code format is invalid.',
+    'instant_win_max_allowed_number_of_codes_per_user_error_message' => 'Sorry, you have exceeded the maximum number of game codes.',
+    'instant_win_server_request_error_message' => 'Sorry, we were unable to solve your request. Please, try again later.',
+    'instant_win_register_limit_per_day' => 10,
+    'instant_win_register_minimum_available_codes' => 100,
+    'instant_win_number_of_codes_per_user' => 10,
+    'instant_win_requested_alternate_exceed_limit_message' => 'You have reached the limit of codes assigned to you.',
+    'instant_win_zipcode_validation_pattern' => '/^[0-9]{5}$/',
+  );
+
+  return $variables;
+}
+
+/**
+ *
+ * Defines the fields of Prize content type.
+ *
+ * @return type
+ */
+function _instant_win_get_content_type_fields() {
+  return array(
+    array(
+      'field_name' => 'field_prize_email_subject',
+      'type' => 'text',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'prize',
+      'label' => 'Email Subject',
+      'widget' => array(
+        'type' => 'text_textfield',
+        'weight' => 4,
+      ),
+    ),
+    array(
+      'field_name' => 'field_prize_email_body',
+      'type' => 'text_with_summary',
+      'description' => 'Email body to be sent. For absolute paths (images and links) use the placeholder <strong>#host_name#</strong>.',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'prize',
+      'label' => 'Email Body',
+      'widget' => array(
+        'type' => 'text_textarea_with_summary',
+        'weight' => 5,
+      ),
+    ),
+    array(
+      'field_name' => 'field_prize_times',
+      'type' => 'datestamp',
+      'translatable' => TRUE,
+      'entity_type' => 'node',
+      'bundle' => 'prize',
+      'label' => 'Prize Time',
+      'cardinality' => -1,
+      'settings' => array(
+        'granularity' => array(
+          'year' => 'year',
+          'month' => 'month',
+          'day' => 'day',
+          'hour' => 'hour',
+          'minute' => 'minute',
+          'second' => 'second',
+        ),
+      ),
+      'widget' => array(
+        'type' => 'date_select',
+        'weight' => 6,
+      ),
+    ),
+  );
+}
+
+/**
+ *
+ * Adds default fields to Prize content type.
+ *
+ */
+function _instant_win_add_default_fields() {
+  $fields = _instant_win_get_content_type_fields();
+
+  foreach ($fields as $field) {
+    field_create_field($field);
+    field_create_instance($field);
+  }
+}
+
+/**
+ * Deletes all the fields of the webform created upon form installation.
+ */
+function _instant_win_remove_default_fields() {
+  $fields = _instant_win_get_content_type_fields();
+
+  foreach ($fields as $field) {
+    $instance = field_info_instance('node', $field['field_name'], 'prize');
+    if ($instance) {
+      field_delete_instance($instance);
+    }
+
+    field_delete_field($field['field_name']);
+  }
+}
+
+/**
+ * Creates webform for the registration form.
+ */
+function _instant_win_create_webform() {
+  $node = new stdClass();
+  $node->type = 'webform';
+  $node->title = st('Register form');
+  $node->language = LANGUAGE_NONE;
+  $node->status = 1;
+  node_object_prepare($node); // Set some default values.
+  $node = node_submit($node); // Prepare node for a submit
+  node_save($node);
+
+  variable_set('instant_win_webform_nid', $node->nid);
+
+  module_load_include('inc', 'webform', 'includes/webform.components');
+  $weight = 0;
+  $created_webform_nid = $node->nid;
+  foreach (_instant_win_get_webform_components() as $form_key => $component) {
+    $default_values = array(
+      'nid'     => $created_webform_nid,
+      'pid'     => 0,
+      'value'   => '',
+      'weight'  => $weight++
+    );
+    webform_component_insert(array_merge($default_values, $component));
+  }
+}
+
+/**
+ * Deletes registration webform.
+ */
+function _instant_win_delete_webform() {
+  node_delete(variable_get('instant_win_webform_nid', 0));
+}
+
+/**
+ *
+ * Declares registration webform components.
+ *
+ * @return type
+ */
+function _instant_win_get_webform_components() {
+  return array(
+    'field_markup_required_fields_message' => array(
+      'form_key'  => 'field_markup_required_fields_message',
+      'name'      => 'Fields marked with an asterisk (*) are required.',
+      'type'      => 'markup',
+      'value'     => '<small>Fields marked with an asterisk (*) are required.</small>',
+      'extra'     => array(
+        'format' => 'full_html',
+      ),
+    ),
+    'field_first_name' => array(
+      'form_key'  => 'field_first_name',
+      'name'      => 'First Name',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 15,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 15,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_last_name' => array(
+      'form_key'  => 'field_last_name',
+      'name'      => 'Last Name',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 15,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 15,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_address_line_1' => array(
+      'form_key'  => 'field_address_line_1',
+      'name'      => 'Mailing Address',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 50,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 50,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_address_line_2' => array(
+      'form_key'  => 'field_address_line_2',
+      'name'      => '',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 50,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 50,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 0,
+    ),
+    'field_city' => array(
+      'form_key'  => 'field_city',
+      'name'      => 'City',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 30,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 30,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_state' => array(
+      'form_key'  => 'field_state',
+      'name'      => 'State',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => 'AL|Alabama
+                    AK|Alaska
+                    AZ|Arizona
+                    AR|Arkansas
+                    CA|California
+                    CO|Colorado
+                    CT|Connecticut
+                    DE|Delaware
+                    DC|District of Columbia
+                    FL|Florida
+                    GA|Georgia
+                    HI|Hawaii
+                    ID|Idaho
+                    IL|Illinois
+                    IN|Indiana
+                    IA|Iowa
+                    KS|Kansas
+                    KY|Kentucky
+                    LA|Louisiana
+                    ME|Maine
+                    MD|Maryland
+                    MA|Massachusetts
+                    MI|Michigan
+                    MN|Minnesota
+                    MS|Mississippi
+                    MO|Missouri
+                    MT|Montana
+                    NE|Nebraska
+                    NV|Nevada
+                    NH|New Hampshire
+                    NJ|New Jersey
+                    NM|New Mexico
+                    NY|New York
+                    NC|North Carolina
+                    ND|North Dakota
+                    OH|Ohio
+                    OK|Oklahoma
+                    OR|Oregon
+                    PA|Pennsylvania
+                    RI|Rhode Island
+                    SC|South Carolina
+                    SD|South Dakota
+                    TN|Tennessee
+                    TX|Texas
+                    UT|Utah
+                    VT|Vermont
+                    VA|Virginia
+                    WA|Washington
+                    WV|West Virginia
+                    WI|Wisconsin
+                    WY|Wyoming',
+        'options_source' => 'united_states',
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'aslist' => TRUE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_zip' => array(
+      'form_key'  => 'field_zip',
+      'name'      => 'Zip/Postal Code',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 5,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'maxlength' => 5,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => TRUE,
+    ),
+    'field_email' => array(
+      'form_key'  => 'field_email',
+      'name'      => 'E-Mail',
+      'type'      => 'email',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 60,
+        'maxlength' => 60,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_telephone' => array(
+      'form_key'  => 'field_telephone',
+      'name'      => 'Telephone (no dashes)',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 60,
+        'maxlength' => 10,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_dob' => array(
+      'form_key'  => 'field_dob',
+      'name'      => 'Date of Birth',
+      'type'      => 'date',
+      'extra'     => array(
+        'multiple' => FALSE,
+        'title_display' => 'inline',
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+        'datepicker' => FALSE,
+        'start_date' => '0 years',
+        'end_date' => '-100 years',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_registration_code' => array(
+      'form_key'  => 'field_registration_code',
+      'name'      => 'Registration Code',
+      'type'      => 'textfield',
+      'extra'     => array(
+        'title_display' => 'inline',
+        'width' => 60,
+        'maxlength' => 10,
+        'disabled' => FALSE,
+        'unique' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_age_18' => array(
+      'form_key'  => 'field_age_18',
+      'name'      => 'I certify that I am 18 years or older',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => '1|I certify that I am 18 years or older',
+        'multiple' => TRUE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+    'field_agree_rules' => array(
+      'form_key'  => 'field_agree_rules',
+      'name'      => 'I have read and agree to the Official Rules',
+      'type'      => 'select',
+      'extra'     => array(
+        'items' => '1|I have read and agree to the Official Rules',
+        'multiple' => TRUE,
+        'title_display' => 'inline',
+        'aslist' => FALSE,
+        'optrand' => FALSE,
+        'conditional_operator' => '=',
+      ),
+      'mandatory' => 1,
+    ),
+  );
+}
+
+/**
+ * Implements hook_enable().
+ */
+function instant_win_enable() {
+  $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
+  $mail_system['instant_win'] = 'InstantWinMailSystem';
+
+  variable_set('mail_system', $mail_system);
+}
+
+/**
+ * Implements hook_disable().
+ */
+function instant_win_disable() {
+  $mail_system = variable_get('mail_system', array('default-system' => 'DefaultMailSystem'));
+  if (isset($mail_system['instant_win'])) {
+    unset($mail_system['instant_win']);
+  }
+
+  variable_set('mail_system', $mail_system);
+}
+

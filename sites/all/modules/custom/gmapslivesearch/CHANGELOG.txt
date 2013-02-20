@@ -1,0 +1,112 @@
+gmapslivesearch CHANGELOG
+-----------------
+7.x-3.8 Tue, Jun 19, 2012
+  [BUGFIXES]
+    * The Bullets are not aligned correctly on the map
+  [ENHANCEMENTS] 
+    * Fixing the parameters setted on the object "google.maps"
+      *gmapslivesearch.mobile.core.js
+      *gmapslivesearch.core.js
+      
+    
+7.x-3.7 Tue, May 01, 2012
+  [BUGFIXES]
+    * Fixing dependency over i18n variable
+  [ENHANCEMENTS] 
+    *gmapslivesearch.module
+    *gmapslivesearch.mobile.js
+      * Added functionality for send to a friend from mobile devices
+    
+7.x-3.6 Tue, May 01, 2012
+  [BUGFIXES]
+    * Inserting configuration fields for Mobile Websites
+  [OTHER]
+    * Merging 7.x-3.4 and 7.x-3.5
+
+7.x-3.5 Tue, May 01, 2012
+  [BUGFIXES]
+    * PES-342: fixing IE JS error
+  [OTHER]
+    * Merging 7.x-3.3 and 7.x-3.4
+
+7.x-3.3 Thu, Apr 19, 2012
+  [BUGFIXES] 
+    *PES-289: fixing translation issues
+
+7.x-2.9 Fri, Mar 16, 2011
+  [ENHANCEMENTS] 
+    *gmapslivesearch.admin.inc
+      * Add specific configuration for mobile devices
+    *gmapslivesearch.module
+      * Add a hook_menu to handle mobile devices, only if the mobile tools module is enabled
+    *gmapslivesearch.buynow.inc
+      * Add javascript variables according to the device
+    * gmapslivesearch.mobile.core.js
+    * sgmapslivesearch.mobile.js
+      * Add scripts to handle mobile devices
+
+7.x-2.9 Fri, Mar 16, 2012
+  [ENHANCEMENTS] 
+    *gmapslivesearch.admin.inc
+      * Add variable to choose if apply or not jqTransform plugin
+      * Add variable to set error message for Address field
+    *gmapslivesearch.js
+      * Apply jqTransform only if the site need this script
+    *gmapslivesearch.module
+      * Add a variable to identify if it is necessary apply jqTransform
+      * Add constants to indentify Address error messages
+    *gmapslivesearch.buynow.inc
+      * Set an error message with CMS variable value
+      
+7.x-2.8 Tue, Feb 28, 2012
+  [ENHANCEMENTS]
+  * gmapslivesearch.variable.inc: add more variables that were created with this request.
+  * gmapslivesearch.core.js: add functions to calculate distance between two geographical points and changed logic to respect the amount of miles limited, by the user using the dropdown or by the admin using the admin console.
+  * gmapslivesearch.admin.inc: add option to configure the max distance from the stores that should be suggested to the visitor
+  * gmapslivesearch.buynow.inc: pass Drupal variables to Javascript
+  * gmapslivesearch.module: 
+
+7.x-2.7 Tue, Feb 28, 2012
+  [BUGFIXES]
+  * gmapslivesearch.variable.inc: added variables configuration to become possible translate using i18n.variable labels on Buy Now pages
+  * gmapslivesearch.core.js: add t function on Map & Direction string
+                             add title on Map & Direction link
+
+7.x-2.6 Wed, Nov 30, 2011
+  [ENHANCEMENTS] 
+  * added a new field on the admin configuration to let the user insert different title labels for the buy online page and the buy online block.
+
+7.x-2.5 Wed, Dec 28, 2011
+  [ENHANCEMENTS]
+  * added configuration to change the text and title of the submit buttons of the "Find a Store" and "Buy Online" boxes.
+  * gmapslivesearch.admin.inc: added module configuration fields.
+  * gmapslivesearch.module: 
+      * added module variable name constants.
+      * implemented communication_tools_destination_alter hook to change sharing url if buy-now search was performed on buy-now page (no $_GET parameter available)
+  * gmapslivesearch.buynow.inc: used the new variables to set the buttons' attributes.
+
+7.x-2.4 Fri, Dec 09, 2011
+  [BUGFIXES]
+  * gmaps first behavior when clicking 'buy online' 'go' button fails if 'search miles within' is enabled as it was
+    searching for select inputs in the same form; fixed by adding a class to the selector which tells the 
+    correct select input;
+  
+7.x-2.3 Wed, Nov 30, 2011
+  [BUGFIXES]
+  * making gmaps consider its configuration and generate circle in the map if milessearch are enabled
+  [ENHANCEMENTS] 
+  * added configuration for jsDrag scroll height on search result page, left default height to 73px. Although it
+    shouldn't be hardcoded, the other sites are using this value. Once configured, it will use the new value.
+  
+7.x-2.2 Fri, Nov 25, 2011
+  [BUGFIXES]
+  * scripts/gmapslivesearch.js: Fix event bug for Find a 
+    Store button. The button doesn't had an event and
+    redirects the user to home page.
+  
+
+7.x-2.1 Tue, Nov 8, 2011
+  [ENHANCEMENTS] 
+  * gmapslivesearch.js: Refactoring replacing the usage
+    of ids per CSS classes and also adequating for better
+    compatibility with other JS libraries.
