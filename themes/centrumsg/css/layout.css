@@ -109,6 +109,18 @@ body,
 #header div.section
 {
     background-color:#FFFFFF;
+    padding: 0 21px !important;
+}
+
+#header div.section, #featured div.section, #messages div.section, #main, #triptych, #footer-columns, #footer
+{
+    padding: 0 21px !important;
+    width: 918px !important;
+}
+
+#featured .section
+{
+    background-color:#FFFFFF !important;
 }
 
 .without-secondary-menu .region-header
@@ -274,14 +286,16 @@ h1#page-title
 
 .page-content .left
 {
-    width:605px;
-    padding:10px;
+    padding: 2%;
+    width: 56%;
 }
 
 .page-content .right
 {
-    width:335px;
+    width: 40%;
 }
+
+
 
 .page-content h4
 {
@@ -308,6 +322,7 @@ h1#page-title
     list-style-type:none;
     margin:0;
     padding:0;
+    float:right;
 }
 
 .feature-nav ul li
@@ -440,7 +455,7 @@ h4.blue-arrow
     background: url(../../../sites/default/files/images/blue-arrow-right.png) no-repeat transparent;
     display:block;
     width:276px;
-    height:50px;
+    height:auto;
     color:#FFFFFF;
     padding:10px;
     font-weight:120%;
@@ -451,13 +466,14 @@ h4.blue-arrow
 {
     background-color:#eeeeee;
     margin:0 15px;
-    padding:10px !important;
-    width:575px !important;
+    padding:0 !important;
+    width:60% !important;
+    margin:0;
 }
 
 .product-content h4.blue-arrow
 {
-    margin:0px 0 0 -10px;
+    margin:10px 0 0 0px;
 }
 
 .product-article
@@ -526,7 +542,23 @@ a.learn-more:hover
 /* Health Centre Page */
 
 
-    
+.one-sidebar #content
+{
+    width:70%;
+}
+
+#sidebar-first, #sidebar-second
+{
+    float:right;
+}
+
+body.node-type-centrum-article-category  #page-wrapper #page #header .section
+{
+    display: block;
+    padding-bottom: 30px !important;
+    position: relative;
+}
+ 
 .health-centre-slider
 {
     padding-top:10px;
@@ -651,7 +683,8 @@ a.learn-more:hover
 
 body.node-context #main
 {
-    padding: 30px 0 !important;
+    /* padding: 30px 0 !important; */
+    padding: 30px 0;
 }
 
 /* block Related Articles */

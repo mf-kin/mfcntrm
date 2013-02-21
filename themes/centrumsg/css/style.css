@@ -1819,6 +1819,13 @@ div.admin-panel .description {
 {
     position:relative;
     background: url("../../../sites/default/files/images/rainbow-shade.png") repeat-x scroll 0% 0% transparent !important;
+    background-color: transparent;
+    display: block;
+    height: 220px;
+    margin: 0 auto;
+    padding: 5px 0 !important;
+    position: relative;
+    width: 100% !important;
 }
 
 .benefit-thumbs .wrapper .top
@@ -1996,13 +2003,66 @@ div.admin-panel .description {
 
 .benefit-thumbs
 {
+    display:block;
+    position:relative;
+    width:950px;
+    height:220px;
+    margin: 0 auto;
+    background-color:transparent;
+    padding:5px;
     background: url("../../../sites/default/files/images/rainbow-shade.png") repeat-x scroll 0% 0% transparent !important;
 }
+
+.benefit-thumbs .wrapper .top
+{
+    display:block;
+    position:relative;
+    width:100%;
+    height:80px;
+    clear:both;
+    background-color:#FFFFFF;
+}
+
+.benefit-thumbs .wrapper .thumb
+{
+    display:block;
+    position:relative;
+    width:33.33%;
+    margin-top:10px;
+    float:left;
+}
+
+.benefit-thumbs .wrapper .thumb a img
+{
+    display:block;
+    position:relative;
+    width:295px;
+    height:122px;
+    margin:0 auto;
+    background-color:transparent;
+}
+
 .benefit-thumbs .thumb a
 {
     display:block;
     border-radius:8px 8px 8px 8px;
 }
+
+.benefit-thumbs .wrapper .left-thumb
+{
+
+}
+
+.benefit-thumbs .wrapper .center-thumb
+{
+
+}
+
+.benefit-thumbs .wrapper .right-thumb
+{
+
+}
+
 
 .benefit-thumbs .wrapper .thumb a img
 {
