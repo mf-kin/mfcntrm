@@ -314,6 +314,83 @@ h1#page-title
     background: url(../../../sites/default/files/images/centrum-cardio-banner.jpg)  0% 0% no-repeat transparent !important;
 }
 
+.left .benefits-desc
+{
+    display:block;
+    position:relative;
+    float:left;
+    width:50%;
+    margin:0px;
+    padding:0px;
+}
+
+.left .desc-left
+{
+    width:49%;
+    padding-right:1%;
+}
+
+.left .desc-right
+{
+    width:49%;
+    padding-left:1%;
+}
+
+#benefits
+{
+    display:block;
+    position:relative;
+    overflow:hidden;
+}
+
+.benefit-row
+{
+    position:relative;
+    display:block;
+    overflow:hidden;
+}
+
+.benefit-points
+{
+    display:block;
+    position:relative;
+    width:49%;
+    padding-right:1%;
+    float:left;
+    overflow:hidden;
+    height:auto;
+}
+
+.benefit-points .benefit-icon
+{
+    display: block;
+    float: left;
+    position: relative;
+    width: 40%;
+}
+
+.benefit-points .benefit-icon img
+{
+    display: block;
+    margin: 0 auto;
+    position: relative;
+}
+
+.benefit-points .benefit-point-desc
+{
+    display: block;
+    float: left;
+    position: relative;
+    width: 60%;
+}
+
+
+.benefit-points .benefit-point-desc p
+{
+
+}
+
+
 .feature-nav ul
 {
     display:block;
@@ -379,6 +456,11 @@ ul.nav li
 ul.nav li.first
 {
     margin-left:0px;
+}
+
+.benefits-formula
+{
+    clear:both;
 }
 
 .benefits-formula ul.nav li a
@@ -729,7 +811,7 @@ ul.flippy
 
 ul.flippy li
 {
-    float:left;
+    /* float:left; */
     padding:0px !important;
     
 }
@@ -751,6 +833,7 @@ ul.flippy li.previous
     position: relative;
     text-align: left;
     width: 47%;
+    float:left;
     
 }
 
@@ -762,6 +845,7 @@ ul.flippy li.next
     position: relative;
     text-align: right;
     width: 47%;
+    float:right;
 }
 
 /* Centrum related articles Pager nav */
