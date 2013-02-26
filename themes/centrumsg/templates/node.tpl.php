@@ -96,12 +96,45 @@
   <?php endif; ?>
 
   <div class="content clearfix"<?php print $content_attributes; ?>>
-    <?php
+  	<?php if( $view_mode == 'full' ): ?>
+    <div class="clearfix">
+        <div class="text-resizer-wrapper">
+            <a href="#" class="adjust-text a1" data-size="1.081em"> A </a>
+            <a href="#" class="adjust-text a2" data-size="1.301em"> A </a>
+            <a href="#" class="adjust-text a3" data-size="1.621em"> A </a>
+        </div>
+        <div class="share-button-wrapper">	
+            <a href="#" class="addthis_button_print" style="text-decoration:none;">
+            	<img src="http://localhost/themes/centrumsg/images/pixel.png" />PRINT
+            </a> | 
+            <a href="#" class="addthis_button_email" style="text-decoration:none;">
+            	<img src="http://localhost/themes/centrumsg/images/pixel.png" />EMAIL
+            </a> | 
+            <a href="#" class="addthis_button">SHARE</a>
+        </div>
+    	<!-- AddThis Button BEGIN -->
+		<script type="text/javascript">
+        var addthis_config = {
+              services_custom: {
+                      name: "AddThis",
+                      url: "http://www.addthis.com/bookmark.php?url={{url}}&title={{title}}",
+                      data_track_addressbar: true,
+					  icon: false,
+                      }
+        }
+        </script>
+        <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-512afc3247769f2e"></script>
+        <!-- AddThis Button END -->
+    </div>
+    <?php endif; ?>
+    <div class="content-to-resize">
+	<?php
       // We hide the comments and links now so that we can render them later.
       hide($content['comments']);
       hide($content['links']);
       print render($content);
     ?>
+    </div>
   </div>
 
   <?php
