@@ -562,6 +562,17 @@ h4.blue-arrow
     margin:0;
 }
 
+.product-content-left
+{
+    width:61% !important;
+    padding:2% !important;
+}
+
+.product-content-right
+{
+    width:35% !important;
+}
+
 .product-content h4.blue-arrow
 {
     margin:10px 0 0 0px;
