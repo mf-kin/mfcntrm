@@ -569,6 +569,19 @@ h1#site-name {
 .content {
   margin-top: 10px;
 }
+.content .share-button-wrapper{
+  font-size:10px; font-family:Arial, Georgia, sans-serif !important; 
+  font-weight:bold; color:#0089cf !important;
+  margin-top:5px;
+  float:left;
+}
+.content .text-resizer-wrapper{
+	float:left; width:90px;
+	margin-top:-5px;
+}
+.content .text-resizer-wrapper a.a1{ font-size:1.071em !important }
+.content .text-resizer-wrapper a.a2{ font-size:1.301em !important}
+.content .text-resizer-wrapper a.a3{ font-size:1.621em !important}
 h1#page-title {
   font-size: 2em;
   line-height: 1;
@@ -2112,4 +2125,20 @@ div.admin-panel .description {
 	color:#666666 !important;
 	font-size:11px;
 	font-weight:normal;
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLEARING STYLES
+|--------------------------------------------------------------------------
+|
+*/
+.clear{ clear:both;}
+.clearfix:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
 }
