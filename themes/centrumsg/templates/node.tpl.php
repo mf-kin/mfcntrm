@@ -96,7 +96,7 @@
   <?php endif; ?>
 
   <div class="content clearfix"<?php print $content_attributes; ?>>
-  	<?php if( $view_mode == 'full' ): ?>
+  	<?php if( $view_mode == 'full' && $type == 'centrum_article_category' ): ?>
     <div class="clearfix">
         <div class="text-resizer-wrapper">
             <a href="#" class="adjust-text a1" data-size="1.081em"> A </a>
