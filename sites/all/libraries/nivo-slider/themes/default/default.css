@@ -28,7 +28,7 @@ Supports Thumbs: true
 }
 
 .theme-default .nivo-controlNav {
-	text-align: center;
+	text-align: right;
 	padding: 20px 0;
 }
 .theme-default .nivo-controlNav a {
@@ -37,11 +37,11 @@ Supports Thumbs: true
 	height:22px;
 	background:url(bullets.png) no-repeat;
 	text-indent:-9999px;
-	border:0;
+	border:20px;
 	margin: 0 2px;
 }
 .theme-default .nivo-controlNav a.active {
-	background-position:0 -22px;
+	background-position:0 -21px;
 }
 
 .theme-default .nivo-directionNav a {

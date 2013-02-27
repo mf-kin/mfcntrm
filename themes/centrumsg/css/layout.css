@@ -539,6 +539,8 @@ table.formula tr td
     margin-top:-66px;
     position:relative;
     z-index:999999;
+	margin-right: 21px;
+    margin-top: -54px;
 }
 
 h4.blue-arrow
@@ -669,7 +671,8 @@ body.node-type-centrum-article-category  #page-wrapper #page #header .section
 
 .health-centre-slider .theme-default .nivo-controlNav
 {
-    margin-top:-66px;
+	margin-right: 21px;
+    margin-top:-54px;
     position:relative;
     z-index:999999;
 }
