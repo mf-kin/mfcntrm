@@ -568,6 +568,8 @@ h1#site-name {
 
 .content {
   margin-top: 10px;
+  font-family:Arial;
+  font-size:14px;
 }
 .content .share-button-wrapper{
   font-size:10px; font-family:Arial, Georgia, sans-serif !important; 
@@ -2110,7 +2112,6 @@ div.admin-panel .description {
 }
 
 .pages-footer .menu-links{
-	font-weight:bold; 
 	text-align:center;
 	color:#454545 !important;
 }
