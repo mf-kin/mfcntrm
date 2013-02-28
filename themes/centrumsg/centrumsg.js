@@ -2,7 +2,12 @@
 
   $(document).ready(function(){
 
-    
+    $('.adjust-text').live('click', function(){
+		var size = $(this).attr('data-size');
+		$('.node .content .content-to-resize').css('font-size', size);
+		return false;
+	});
+	
     $('a.tab').live('click', function(e){
             e.preventDefault();
             var id = $(this).attr('href');
