@@ -132,7 +132,7 @@ body,
 
 #page
 {
-     background: url(../../../sites/default/files/bg-pixels.jpg)  50% 0% repeat-x transparent !important;
+     background: url(/sites/default/files/bg-pixels.jpg)  50% 0% repeat-x transparent !important;
 }
 
 #page-wrapper, #footer-wrapper
@@ -205,7 +205,7 @@ body,
 
 #page
 {
-     background: url(../../../sites/default/files/bg-pixels.jpg)  50% 0% repeat-x transparent !important;
+     background: url(/sites/default/files/bg-pixels.jpg)  50% 0% repeat-x transparent !important;
 }
 
 #page-wrapper, #footer-wrapper
@@ -329,7 +329,7 @@ h1#page-title
     width:913px;
     height:381px;
     margin:0 auto;
-    background: url(../../../sites/default/files/images/centrum-cardio-banner.jpg)  0% 0% no-repeat transparent !important;
+    background: url(/sites/default/files/images/centrum-cardio-banner.jpg)  0% 0% no-repeat transparent !important;
 }
 
 .left .benefits-desc
@@ -414,7 +414,7 @@ h1#page-title
 
 .benefit-points .benefit-point-desc p
 {
-
+    font-size:13px;
 }
 
 
@@ -436,7 +436,7 @@ h1#page-title
 
 .feature-nav ul li a
 {
-    background: url("../../../sites/default/files/images/product-button.png") no-repeat scroll 0 0 transparent !important;
+    background: url("/sites/default/files/images/product-button.png") no-repeat scroll 0 0 transparent !important;
     color: #FFFFFF;
     display: block;
     font-family: Arial;
@@ -448,20 +448,35 @@ h1#page-title
 
 .feature-nav ul li a.active
 {
-    background: url(../../../sites/default/files/images/product-button-active.png)  0% 0% no-repeat transparent !important;
+    background: url(/sites/default/files/images/product-button-active.png)  0% 0% no-repeat transparent !important;
 }
 
 .feature-nav ul li a.new
 {
-    background: url(../../../sites/default/files/images/product-button-new.png)  0% 0% no-repeat transparent !important;
+    background: url(/sites/default/files/images/product-button-new.png)  0% 0% no-repeat transparent !important;
+}
+
+.feature-nav ul li a.active-new
+{
+    background: url(/sites/default/files/images/product-button-active-new.png)  0% 0% no-repeat transparent !important;
 }
 
 .feature-nav a.choose-supplement
 {
     display:block;
-    background: url(../../../sites/default/files/images/choose-supplement.png) 0% 0% no-repeat transparent;
-    width:280px;
-    height:121px;
+    background: url(/sites/default/files/images/choose_the_right_supplement.jpg) 0% 0% no-repeat transparent;
+    width:282px;
+    height:128px;
+    float:right;
+}
+
+.feature-nav a.nut-tool-add
+{
+
+display:block;
+    background: url(/sites/default/files/images/nutritional_tool_ad.jpg) 0% 0% no-repeat transparent;
+    width:284px;
+    height:270px;
     float:right;
 }
 
@@ -563,7 +578,7 @@ table.formula tr td
 
 h4.blue-arrow
 {
-    background: url(../../../sites/default/files/images/blue-arrow-right.png) no-repeat transparent;
+    background: url(/sites/default/files/images/blue-arrow-right.png) no-repeat transparent;
     display:block;
     width:276px;
     height:auto;
@@ -645,7 +660,7 @@ a.learn-more
     position:relative;
     width:123px;
     height:37px;
-    background: url(../../../sites/default/files/images/orange-button-right.png) no-repeat transparent;
+    background: url(/sites/default/files/images/orange-button-right.png) no-repeat transparent;
     padding:5px 0 5px 10px;
     
 }
@@ -705,7 +720,7 @@ body.node-type-centrum-article-category  #page-wrapper #page #header .section
 
 .node-centrum-article-category h2
 {
-    background: url("../../../sites/default/files/images/orange-arrow.png") no-repeat scroll 0 60% transparent;
+    background: url("/sites/default/files/images/orange-arrow.png") no-repeat scroll 0 60% transparent;
     margin-top: 0;
     padding-left: 20px;
     padding-top: 0.5em;
@@ -758,7 +773,7 @@ body.node-type-centrum-article-category  #page-wrapper #page #header .section
 
 #block-views-centrum-articles-block h2
 {
-    background: url("../../../sites/default/files/images/h-arrow-left.png") no-repeat scroll 0 0 transparent;
+    background: url("/sites/default/files/images/h-arrow-left.png") no-repeat scroll 0 0 transparent;
     color: #FFFFFF;
     display: block;
     font-family: Arial;
@@ -868,7 +883,7 @@ ul.flippy li a
 
 ul.flippy li.previous
 {
-    background: url("../../../sites/default/files/images/prev-arrow.png") no-repeat scroll 0 50% transparent;
+    background: url("/sites/default/files/images/prev-arrow.png") no-repeat scroll 0 50% transparent;
     display: block;
     padding-left: 3% !important;
     position: relative;
@@ -880,7 +895,7 @@ ul.flippy li.previous
 
 ul.flippy li.next
 {
-    background: url("../../../sites/default/files/images/next-arrow.png") no-repeat scroll 100% 50% transparent;
+    background: url("/sites/default/files/images/next-arrow.png") no-repeat scroll 100% 50% transparent;
     display: block;
     padding-right: 3% !important;
     position: relative;

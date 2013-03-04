@@ -1735,7 +1735,7 @@ div.admin-panel .description {
 
 #main-menu-links a
 {
-    background: url("../../../sites/default/files/nav-highlight-off.jpg") repeat-x scroll 50% 100% transparent !important;
+    background: url("/sites/default/files/nav-highlight-off.jpg") repeat-x scroll 50% 100% transparent !important;
     text-transform:uppercase;
     color:#454545;
 }
@@ -1747,7 +1747,7 @@ div.admin-panel .description {
 
 #main-menu-links a.active
 {
-    background: url("../../../sites/default/files/nav-highlight-on.jpg") repeat-x scroll 50% 100% transparent !important;
+    background: url("/sites/default/files/nav-highlight-on.jpg") repeat-x scroll 50% 100% transparent !important;
     color:#085283;
 }
 
@@ -1833,7 +1833,7 @@ div.admin-panel .description {
 .benefit-thumbs
 {
     position:relative;
-    background: url("../../../sites/default/files/images/rainbow-shade.png") repeat-x scroll 0% 0% transparent !important;
+    background: url("/sites/default/files/images/rainbow-shade.png") repeat-x scroll 0% 0% transparent !important;
     background-color: transparent;
     display: block;
     height: 220px;
@@ -1920,7 +1920,7 @@ div.admin-panel .description {
 
 #main-menu-links a
 {
-    background: url("../../../sites/default/files/nav-highlight-off.jpg") repeat-x scroll 50% 100% transparent !important;
+    background: url("/sites/default/files/nav-highlight-off.jpg") repeat-x scroll 50% 100% transparent !important;
     text-transform:uppercase;
     color:#454545;
 }
@@ -1932,7 +1932,7 @@ div.admin-panel .description {
 
 #main-menu-links a.active
 {
-    background: url("../../../sites/default/files/nav-highlight-on.jpg") repeat-x scroll 50% 100% transparent !important;
+    background: url("/sites/default/files/nav-highlight-on.jpg") repeat-x scroll 50% 100% transparent !important;
     color:#085283;
 }
 
@@ -2025,15 +2025,15 @@ div.admin-panel .description {
     margin: 0 auto;
     background-color:transparent;
     padding:5px;
-    background: url("../../../sites/default/files/images/rainbow-shade.png") repeat-x scroll 0% 0% transparent !important;
+    background: url("/sites/default/files/images/rainbow-shade.png") repeat-x scroll 0% 0% transparent !important;
 }
 
 .benefit-thumbs .wrapper .top
 {
-    display:block;
+    /* display:block !important; */
     position:relative;
     width:100%;
-    height:80px;
+    /* height:80px !important; */
     clear:both;
     background-color:#FFFFFF;
 }
@@ -2045,6 +2045,18 @@ div.admin-panel .description {
     width:33.33%;
     margin-top:10px;
     float:left;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0)
+{ 
+    .benefit-thumbs .wrapper .thumb
+    {
+        display:block;
+        position:relative;
+        width:33.33%;
+        margin-top:80px;
+        float:left;
+    }
 }
 
 .benefit-thumbs .wrapper .thumb a img
