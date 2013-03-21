@@ -98,6 +98,7 @@
   <div class="content clearfix"<?php print $content_attributes; ?>>
   	<?php if( $view_mode == 'full' && $type == 'centrum_article_category' ): ?>
     <div class="clearfix">
+    	<?php global $base_url; ?>
         <div class="text-resizer-wrapper">
             <a href="#" class="adjust-text a1" data-size="1.081em"> A </a>
             <a href="#" class="adjust-text a2" data-size="1.301em"> A </a>
@@ -105,21 +106,20 @@
         </div>
         <div class="share-button-wrapper">	
             <a href="#" class="addthis_button_print" style="text-decoration:none;">
-            	<img src="http://localhost/themes/centrumsg/images/pixel.png" />PRINT
-            </a> | 
-            <a href="#" class="addthis_button_email" style="text-decoration:none;">
-            	<img src="http://localhost/themes/centrumsg/images/pixel.png" />EMAIL
+            	<img src="<?php echo $base_url ?>/themes/centrumsg/images/pixel.png" />PRINT
             </a> | 
             <a href="#" class="addthis_button">SHARE</a>
         </div>
     	<!-- AddThis Button BEGIN -->
 		<script type="text/javascript">
-        var addthis_config = {
+        var addthis_config = { 
+			  services_compact:"facebook,twitter,print,favorites",
               services_custom: {
                       name: "AddThis",
                       url: "http://www.addthis.com/bookmark.php?url={{url}}&title={{title}}",
                       data_track_addressbar: true,
 					  icon: false,
+					  
                       }
         }
         </script>
