@@ -1,7 +1,12 @@
 (function ($) {
 
   $(document).ready(function(){
-
+	
+	$('#user-login input').attr('autocomplete','off');
+	$('#user-login input').attr('autocorrect','off');
+	$('#user-login input').attr('autocapitalize','off');
+	$('#user-login input').attr('spellcheck','off');
+	
     $('.adjust-text').live('click', function(){
 		var size = $(this).attr('data-size');
 		$('.node .content .content-to-resize').css('font-size', size);
